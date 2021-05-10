@@ -63,6 +63,11 @@ func (g *DefaultGenerator) GenLogic(ctx DirContext, proto parser.Proto, cfg *con
 			return err
 		}
 
+		comment := "业务逻辑"
+		if fs := strings.Fields(parser.GetComment(rpc.Doc())); len(fs) > 2 {
+			comment = fs[2]
+		}
+
 		imports := collection.NewSet()
 		imports.AddStr(fmt.Sprintf(`"%v"`, ctx.GetSvc().Package))
 		imports.AddStr(fmt.Sprintf(`"%v"`, ctx.GetPb().Package))
@@ -74,6 +79,7 @@ func (g *DefaultGenerator) GenLogic(ctx DirContext, proto parser.Proto, cfg *con
 			"logicName": fmt.Sprintf("%sLogic", stringx.From(rpc.Name).ToCamel()),
 			"functions": functions,
 			"imports":   strings.Join(imports.KeysStr(), util.NL),
+			"comment":   comment,
 		}, filename, false)
 		if err != nil {
 			return err

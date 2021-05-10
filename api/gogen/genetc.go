@@ -3,6 +3,7 @@ package gogen
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/sliveryou/goctl/api/spec"
 	"github.com/sliveryou/goctl/config"
@@ -27,6 +28,10 @@ func genEtc(dir string, cfg *config.Config, api *spec.ApiSpec) error {
 	service := api.Service
 	host := "0.0.0.0"
 	port := strconv.Itoa(defaultPort)
+	serviceName := service.Name
+	if i := strings.Index(serviceName, "service"); i > 0 {
+		serviceName = strings.TrimSuffix(serviceName[:i], "-")
+	}
 
 	return genFile(fileGenConfig{
 		dir:             dir,
@@ -37,7 +42,7 @@ func genEtc(dir string, cfg *config.Config, api *spec.ApiSpec) error {
 		templateFile:    etcTemplateFile,
 		builtinTemplate: etcTemplate,
 		data: map[string]string{
-			"serviceName": service.Name,
+			"serviceName": serviceName,
 			"host":        host,
 			"port":        port,
 		},

@@ -36,7 +36,12 @@ func (g *DefaultGenerator) GenEtc(ctx DirContext, _ parser.Proto, cfg *conf.Conf
 		return err
 	}
 
+	serviceName := strings.ToLower(stringx.From(ctx.GetServiceName().Source()).ToCamel())
+	if i := strings.Index(serviceName, "service"); i > 0 {
+		serviceName = strings.TrimSuffix(serviceName[:i], "-")
+	}
+
 	return util.With("etc").Parse(text).SaveTo(map[string]interface{}{
-		"serviceName": strings.ToLower(stringx.From(ctx.GetServiceName().Source()).ToCamel()),
+		"serviceName": serviceName,
 	}, fileName, false)
 }

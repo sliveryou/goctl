@@ -42,11 +42,17 @@ func {{.HandlerName}}(ctx *svc.ServiceContext) http.HandlerFunc {
 type handlerInfo struct {
 	ImportPackages string
 	HandlerName    string
+	PathName       string
+	MethodName     string
+	Tag            string
+	Summary        string
+	ResponseType   string
 	RequestType    string
 	LogicType      string
 	Call           string
 	HasResp        bool
 	HasRequest     bool
+	HasSecurity    bool
 }
 
 func genHandler(dir string, cfg *config.Config, group spec.Group, route spec.Route) error {
@@ -58,15 +64,37 @@ func genHandler(dir string, cfg *config.Config, group spec.Group, route spec.Rou
 	if err != nil {
 		return err
 	}
+	tag := "Tag"
+	if a := group.GetAnnotation("tag"); a != "" {
+		tag = strings.TrimSuffix(strings.TrimPrefix(a, "\""), "\"")
+	}
+	summary := "Summary"
+	if route.AtDoc.Properties != nil {
+		summary = strings.TrimSuffix(strings.TrimPrefix(route.AtDoc.Properties["summary"], "\""), "\"")
+	}
+	hasSecurity := false
+	if ja := group.GetAnnotation("jwt"); ja != "" {
+		hasSecurity = true
+	} else if ma := strings.ToLower(group.GetAnnotation("middleware")); ma != "" {
+		if strings.Contains(ma, "jwt") || strings.Contains(ma, "auth") {
+			hasSecurity = true
+		}
+	}
 
 	return doGenToFile(dir, handler, cfg, group, route, handlerInfo{
 		ImportPackages: genHandlerImports(group, route, parentPkg),
 		HandlerName:    handler,
+		PathName:       strings.TrimSpace(route.Path),
+		MethodName:     strings.ToLower(strings.TrimSpace(route.Method)),
+		Tag:            tag,
+		Summary:        summary,
+		ResponseType:   util.Title(route.ResponseTypeName()),
 		RequestType:    util.Title(route.RequestTypeName()),
 		LogicType:      strings.Title(getLogicName(route)),
 		Call:           strings.Title(strings.TrimSuffix(handler, "Handler")),
 		HasResp:        len(route.ResponseTypeName()) > 0,
 		HasRequest:     len(route.RequestTypeName()) > 0,
+		HasSecurity:    hasSecurity,
 	})
 }
 

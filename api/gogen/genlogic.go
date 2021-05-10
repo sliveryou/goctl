@@ -82,6 +82,10 @@ func genLogicByRoute(dir string, cfg *config.Config, group spec.Group, route spe
 	if len(route.RequestTypeName()) > 0 {
 		requestString = "req " + requestGoTypeName(route, typesPacket)
 	}
+	summary := "业务逻辑"
+	if route.AtDoc.Properties != nil {
+		summary = strings.TrimSuffix(strings.TrimPrefix(route.AtDoc.Properties["summary"], "\""), "\"")
+	}
 
 	return genFile(fileGenConfig{
 		dir:             dir,
@@ -98,6 +102,7 @@ func genLogicByRoute(dir string, cfg *config.Config, group spec.Group, route spe
 			"responseType": responseString,
 			"returnString": returnString,
 			"request":      requestString,
+			"summary":      summary,
 		},
 	})
 }
@@ -118,10 +123,10 @@ func getLogicFolderPath(group spec.Group, route spec.Route) string {
 func genLogicImports(route spec.Route, parentPkg string) string {
 	var imports []string
 	imports = append(imports, `"context"`+"\n")
+	imports = append(imports, fmt.Sprintf("\"%s/core/logx\"\n", vars.ProjectOpenSourceURL))
 	imports = append(imports, fmt.Sprintf("\"%s\"", ctlutil.JoinPackages(parentPkg, contextDir)))
 	if len(route.ResponseTypeName()) > 0 || len(route.RequestTypeName()) > 0 {
-		imports = append(imports, fmt.Sprintf("\"%s\"\n", ctlutil.JoinPackages(parentPkg, typesDir)))
+		imports = append(imports, fmt.Sprintf("\"%s\"", ctlutil.JoinPackages(parentPkg, typesDir)))
 	}
-	imports = append(imports, fmt.Sprintf("\"%s/core/logx\"", vars.ProjectOpenSourceURL))
 	return strings.Join(imports, "\n\t")
 }

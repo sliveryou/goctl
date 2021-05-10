@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/tal-tech/go-zero/core/errorx"
-	"github.com/sliveryou/goctl/api/parser"
 	"github.com/sliveryou/goctl/api/util"
 	ctlutil "github.com/sliveryou/goctl/util"
 	"github.com/urfave/cli"
@@ -91,19 +90,19 @@ func ApiFormatByPath(apiFilePath string) error {
 		return err
 	}
 
-	_, err = parser.ParseContent(result)
-	if err != nil {
-		return err
-	}
+	// _, err = parser.ParseContent(result)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return ioutil.WriteFile(apiFilePath, []byte(result), os.ModePerm)
 }
 
 func apiFormat(data string) (string, error) {
-	_, err := parser.ParseContent(data)
-	if err != nil {
-		return "", err
-	}
+	// _, err := parser.ParseContent(data)
+	// if err != nil {
+	// 	return "", err
+	// }
 
 	var builder strings.Builder
 	s := bufio.NewScanner(strings.NewReader(data))
