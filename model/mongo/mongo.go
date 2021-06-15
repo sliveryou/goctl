@@ -5,9 +5,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/urfave/cli"
+
 	"github.com/sliveryou/goctl/config"
 	"github.com/sliveryou/goctl/model/mongo/generate"
-	"github.com/urfave/cli"
 )
 
 // Action provides the entry for goctl mongo code generation.

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/sliveryou/goctl/model/sql/parser"
 	"github.com/sliveryou/goctl/util/stringx"
 )
@@ -78,8 +79,8 @@ func TestGenCacheKeys(t *testing.T) {
 		assert.Equal(t, true, func() bool {
 			return cacheKeyEqual(primariCacheKey, Key{
 				VarLeft:           "cacheUserIdPrefix",
-				VarRight:          `"cache#user#id#"`,
-				VarExpression:     `cacheUserIdPrefix = "cache#user#id#"`,
+				VarRight:          `"cache:user:id:"`,
+				VarExpression:     `cacheUserIdPrefix = "cache:user:id:"`,
 				KeyLeft:           "userIdKey",
 				KeyRight:          `fmt.Sprintf("%s%v", cacheUserIdPrefix, id)`,
 				DataKeyRight:      `fmt.Sprintf("%s%v", cacheUserIdPrefix, data.Id)`,
@@ -95,19 +96,19 @@ func TestGenCacheKeys(t *testing.T) {
 			expected := []Key{
 				{
 					VarLeft:           "cacheUserClassNamePrefix",
-					VarRight:          `"cache#user#class#name#"`,
-					VarExpression:     `cacheUserClassNamePrefix = "cache#user#class#name#"`,
+					VarRight:          `"cache:user:class:name:"`,
+					VarExpression:     `cacheUserClassNamePrefix = "cache:user:class:name:"`,
 					KeyLeft:           "userClassNameKey",
-					KeyRight:          `fmt.Sprintf("%s%v%v", cacheUserClassNamePrefix, class, name)`,
-					DataKeyRight:      `fmt.Sprintf("%s%v%v", cacheUserClassNamePrefix, data.Class, data.Name)`,
-					KeyExpression:     `userClassNameKey := fmt.Sprintf("%s%v%v", cacheUserClassNamePrefix, class, name)`,
-					DataKeyExpression: `userClassNameKey := fmt.Sprintf("%s%v%v", cacheUserClassNamePrefix, data.Class, data.Name)`,
+					KeyRight:          `fmt.Sprintf("%s%v:%v", cacheUserClassNamePrefix, class, name)`,
+					DataKeyRight:      `fmt.Sprintf("%s%v:%v", cacheUserClassNamePrefix, data.Class, data.Name)`,
+					KeyExpression:     `userClassNameKey := fmt.Sprintf("%s%v:%v", cacheUserClassNamePrefix, class, name)`,
+					DataKeyExpression: `userClassNameKey := fmt.Sprintf("%s%v:%v", cacheUserClassNamePrefix, data.Class, data.Name)`,
 					FieldNameJoin:     []string{"class", "name"},
 				},
 				{
 					VarLeft:           "cacheUserMobilePrefix",
-					VarRight:          `"cache#user#mobile#"`,
-					VarExpression:     `cacheUserMobilePrefix = "cache#user#mobile#"`,
+					VarRight:          `"cache:user:mobile:"`,
+					VarExpression:     `cacheUserMobilePrefix = "cache:user:mobile:"`,
 					KeyLeft:           "userMobileKey",
 					KeyRight:          `fmt.Sprintf("%s%v", cacheUserMobilePrefix, mobile)`,
 					DataKeyRight:      `fmt.Sprintf("%s%v", cacheUserMobilePrefix, data.Mobile)`,
@@ -136,7 +137,7 @@ func TestGenCacheKeys(t *testing.T) {
 	})
 }
 
-func cacheKeyEqual(k1 Key, k2 Key) bool {
+func cacheKeyEqual(k1, k2 Key) bool {
 	k1Join := k1.FieldNameJoin
 	k2Join := k2.FieldNameJoin
 	sort.Strings(k1Join)

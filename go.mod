@@ -15,4 +15,5 @@ require (
 	github.com/urfave/cli v1.22.5
 	github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2
 	github.com/zeromicro/antlr v0.0.1
+	go.uber.org/atomic v1.6.0
 )

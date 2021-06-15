@@ -5,6 +5,8 @@ import (
 	"sort"
 
 	"github.com/tal-tech/go-zero/core/stores/sqlx"
+
+	"github.com/sliveryou/goctl/model/sql/util"
 )
 
 const indexPri = "PRIMARY"
@@ -151,6 +153,7 @@ func (c *ColumnData) Convert() (*Table, error) {
 
 	m := make(map[string][]*Column)
 	for _, each := range c.Columns {
+		each.Comment = util.TrimNewLine(each.Comment)
 		if each.Index != nil {
 			m[each.Index.IndexName] = append(m[each.Index.IndexName], each)
 		}

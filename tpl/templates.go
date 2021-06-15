@@ -4,7 +4,10 @@ import (
 	"fmt"
 
 	"github.com/logrusorgru/aurora"
+	"github.com/urfave/cli"
+
 	"github.com/tal-tech/go-zero/core/errorx"
+
 	"github.com/sliveryou/goctl/api/gogen"
 	"github.com/sliveryou/goctl/docker"
 	"github.com/sliveryou/goctl/kube"
@@ -12,7 +15,6 @@ import (
 	modelgen "github.com/sliveryou/goctl/model/sql/gen"
 	rpcgen "github.com/sliveryou/goctl/rpc/generator"
 	"github.com/sliveryou/goctl/util"
-	"github.com/urfave/cli"
 )
 
 const templateParentPath = "/"

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/logrusorgru/aurora"
+	"go.uber.org/atomic"
 )
 
 // NL defines a new line
@@ -16,6 +17,9 @@ const (
 	NL       = "\n"
 	goctlDir = ".goctl"
 )
+
+// TemplateFolder the goctl template folder
+var TemplateFolder atomic.String
 
 // CreateIfNotExist creates a file if it is not exists
 func CreateIfNotExist(file string) (*os.File, error) {
@@ -71,12 +75,16 @@ func GetGoctlHome() (string, error) {
 
 // GetTemplateDir returns the category path value in GoctlHome where could get it by GetGoctlHome
 func GetTemplateDir(category string) (string, error) {
-	goctlHome, err := GetGoctlHome()
-	if err != nil {
-		return "", err
+	dir := TemplateFolder.Load()
+	if dir == "" {
+		goctlHome, err := GetGoctlHome()
+		if err != nil {
+			return "", err
+		}
+		dir = goctlHome
 	}
 
-	return filepath.Join(goctlHome, category), nil
+	return filepath.Join(dir, category), nil
 }
 
 // InitTemplates creates template files GoctlHome where could get it by GetGoctlHome

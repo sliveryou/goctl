@@ -3,8 +3,9 @@ package ktgen
 import (
 	"errors"
 
-	"github.com/sliveryou/goctl/api/parser"
 	"github.com/urfave/cli"
+
+	"github.com/sliveryou/goctl/api/parser"
 )
 
 // KtCommand the generate kotlin code command entrance

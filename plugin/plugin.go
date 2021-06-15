@@ -13,11 +13,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/urfave/cli"
+
 	"github.com/sliveryou/goctl/api/parser"
 	"github.com/sliveryou/goctl/api/spec"
 	"github.com/sliveryou/goctl/rpc/execx"
 	"github.com/sliveryou/goctl/util"
-	"github.com/urfave/cli"
 )
 
 const pluginArg = "_plugin"
@@ -136,7 +137,7 @@ func getCommand(arg string) (string, bool, error) {
 	return arg, false, nil
 }
 
-func downloadFile(filepath string, url string) error {
+func downloadFile(filepath, url string) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return err

@@ -7,7 +7,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/tal-tech/go-zero/core/stringx"
+
 	"github.com/sliveryou/goctl/util"
 )
 

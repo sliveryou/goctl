@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/sliveryou/goctl/api/parser/g4/ast"
 	"github.com/sliveryou/goctl/api/parser/g4/gen/api"
 )

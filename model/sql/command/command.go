@@ -7,14 +7,16 @@ import (
 	"strings"
 
 	"github.com/go-sql-driver/mysql"
+	"github.com/urfave/cli"
+
 	"github.com/tal-tech/go-zero/core/logx"
 	"github.com/tal-tech/go-zero/core/stores/sqlx"
+
 	"github.com/sliveryou/goctl/config"
 	"github.com/sliveryou/goctl/model/sql/gen"
 	"github.com/sliveryou/goctl/model/sql/model"
 	"github.com/sliveryou/goctl/model/sql/util"
 	"github.com/sliveryou/goctl/util/console"
-	"github.com/urfave/cli"
 )
 
 const (

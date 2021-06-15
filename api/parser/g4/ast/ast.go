@@ -5,9 +5,10 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/zeromicro/antlr"
+
 	"github.com/sliveryou/goctl/api/parser/g4/gen/api"
 	"github.com/sliveryou/goctl/util/console"
-	"github.com/zeromicro/antlr"
 )
 
 type (

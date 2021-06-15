@@ -3,8 +3,9 @@ package gogen
 import (
 	"fmt"
 
-	"github.com/sliveryou/goctl/util"
 	"github.com/urfave/cli"
+
+	"github.com/sliveryou/goctl/util"
 )
 
 const (

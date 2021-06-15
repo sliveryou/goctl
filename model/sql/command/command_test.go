@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/sliveryou/goctl/model/sql/gen"
-
 	"github.com/stretchr/testify/assert"
+
 	"github.com/sliveryou/goctl/config"
+	"github.com/sliveryou/goctl/model/sql/gen"
 	"github.com/sliveryou/goctl/util"
 )
 

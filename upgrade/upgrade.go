@@ -3,8 +3,9 @@ package upgrade
 import (
 	"fmt"
 
-	"github.com/sliveryou/goctl/rpc/execx"
 	"github.com/urfave/cli"
+
+	"github.com/sliveryou/goctl/rpc/execx"
 )
 
 // Upgrade gets the latest goctl by

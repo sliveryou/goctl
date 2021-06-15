@@ -9,8 +9,10 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/tal-tech/go-zero/core/logx"
 	"github.com/tal-tech/go-zero/core/stringx"
+
 	"github.com/sliveryou/goctl/config"
 	"github.com/sliveryou/goctl/model/sql/builderx"
 )

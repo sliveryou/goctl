@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/tal-tech/go-zero/core/logx"
+
 	"github.com/sliveryou/goctl/api/spec"
 	"github.com/sliveryou/goctl/util"
 )

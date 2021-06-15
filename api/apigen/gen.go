@@ -8,8 +8,9 @@ import (
 	"text/template"
 
 	"github.com/logrusorgru/aurora"
-	"github.com/sliveryou/goctl/util"
 	"github.com/urfave/cli"
+
+	"github.com/sliveryou/goctl/util"
 )
 
 const apiTemplate = `

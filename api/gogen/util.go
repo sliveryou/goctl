@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/tal-tech/go-zero/core/collection"
+
 	"github.com/sliveryou/goctl/api/spec"
 	"github.com/sliveryou/goctl/api/util"
 	ctlutil "github.com/sliveryou/goctl/util"

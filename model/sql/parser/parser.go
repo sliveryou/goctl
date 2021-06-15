@@ -5,12 +5,15 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/xwb1989/sqlparser"
+
 	"github.com/tal-tech/go-zero/core/collection"
+
 	"github.com/sliveryou/goctl/model/sql/converter"
 	"github.com/sliveryou/goctl/model/sql/model"
+	"github.com/sliveryou/goctl/model/sql/util"
 	"github.com/sliveryou/goctl/util/console"
 	"github.com/sliveryou/goctl/util/stringx"
-	"github.com/xwb1989/sqlparser"
 )
 
 const timeImport = "time.Time"
@@ -185,7 +188,7 @@ func convertColumns(columns []*sqlparser.ColumnDefinition, primaryColumn string)
 		field.Name = stringx.From(column.Name.String())
 		field.DataBaseType = column.Type.Type
 		field.DataType = dataType
-		field.Comment = comment
+		field.Comment = util.TrimNewLine(comment)
 
 		if field.Name.Source() == primaryColumn {
 			primaryKey = Primary{

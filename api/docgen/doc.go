@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/tal-tech/go-zero/core/stringx"
+
 	"github.com/sliveryou/goctl/api/gogen"
 	"github.com/sliveryou/goctl/api/spec"
 	"github.com/sliveryou/goctl/api/util"
@@ -33,7 +34,7 @@ const (
 `
 )
 
-func genDoc(api *spec.ApiSpec, dir string, filename string) error {
+func genDoc(api *spec.ApiSpec, dir, filename string) error {
 	fp, _, err := util.MaybeCreateFile(dir, "", filename)
 	if err != nil {
 		return err

@@ -4,9 +4,11 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/tal-tech/go-zero/core/logx"
-	"github.com/sliveryou/goctl/api/parser"
 	"github.com/urfave/cli"
+
+	"github.com/tal-tech/go-zero/core/logx"
+
+	"github.com/sliveryou/goctl/api/parser"
 )
 
 // DartCommand create dart network request code

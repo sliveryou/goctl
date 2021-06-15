@@ -11,10 +11,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/urfave/cli"
+
 	"github.com/tal-tech/go-zero/core/errorx"
+
 	"github.com/sliveryou/goctl/api/util"
 	ctlutil "github.com/sliveryou/goctl/util"
-	"github.com/urfave/cli"
 )
 
 const (
@@ -85,12 +87,17 @@ func ApiFormatByPath(apiFilePath string) error {
 		return err
 	}
 
-	result, err := apiFormat(string(data))
+	abs, err := filepath.Abs(apiFilePath)
 	if err != nil {
 		return err
 	}
 
-	// _, err = parser.ParseContent(result)
+	result, err := apiFormat(string(data), abs)
+	if err != nil {
+		return err
+	}
+
+	// _, err = parser.ParseContent(result, abs)
 	// if err != nil {
 	// 	return err
 	// }
@@ -98,8 +105,8 @@ func ApiFormatByPath(apiFilePath string) error {
 	return ioutil.WriteFile(apiFilePath, []byte(result), os.ModePerm)
 }
 
-func apiFormat(data string) (string, error) {
-	// _, err := parser.ParseContent(data)
+func apiFormat(data string, filename ...string) (string, error) {
+	// _, err := parser.ParseContent(data, filename...)
 	// if err != nil {
 	// 	return "", err
 	// }

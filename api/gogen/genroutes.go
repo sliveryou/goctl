@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	"github.com/tal-tech/go-zero/core/collection"
+
 	"github.com/sliveryou/goctl/api/spec"
 	"github.com/sliveryou/goctl/config"
 	"github.com/sliveryou/goctl/util"
@@ -62,7 +63,7 @@ type (
 	}
 )
 
-func genRoutes(dir string, cfg *config.Config, api *spec.ApiSpec) error {
+func genRoutes(dir, rootPkg string, cfg *config.Config, api *spec.ApiSpec) error {
 	var builder strings.Builder
 	groups, err := getRoutes(api)
 	if err != nil {
@@ -116,11 +117,6 @@ func genRoutes(dir string, cfg *config.Config, api *spec.ApiSpec) error {
 		}
 	}
 
-	parentPkg, err := getParentPackage(dir)
-	if err != nil {
-		return err
-	}
-
 	routeFilename, err := format.FileNamingFormat(cfg.NamingFormat, routesFilename)
 	if err != nil {
 		return err
@@ -139,7 +135,7 @@ func genRoutes(dir string, cfg *config.Config, api *spec.ApiSpec) error {
 		templateFile:    "",
 		builtinTemplate: routesTemplate,
 		data: map[string]string{
-			"importPackages":  genRouteImports(parentPkg, api),
+			"importPackages":  genRouteImports(rootPkg, api),
 			"routesAdditions": strings.TrimSpace(builder.String()),
 		},
 	})
