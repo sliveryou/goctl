@@ -5,9 +5,8 @@ import (
 	"fmt"
 
 	"github.com/logrusorgru/aurora"
-	"github.com/urfave/cli"
-
 	"github.com/sliveryou/goctl/api/parser"
+	"github.com/urfave/cli"
 )
 
 // GoValidateApi verifies whether the api has a syntax error

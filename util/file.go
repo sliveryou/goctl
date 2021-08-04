@@ -18,8 +18,15 @@ const (
 	goctlDir = ".goctl"
 )
 
-// TemplateFolder the goctl template folder
-var TemplateFolder atomic.String
+var (
+	// TemplateFolder the goctl template folder
+	TemplateFolder atomic.String
+	goctlHome string
+)
+
+func RegisterGoctlHome(home string) {
+	goctlHome = home
+}
 
 // CreateIfNotExist creates a file if it is not exists
 func CreateIfNotExist(file string) (*os.File, error) {
@@ -66,6 +73,10 @@ func FileNameWithoutExt(file string) string {
 
 // GetGoctlHome returns the path value of the goctl home where Join $HOME with .goctl
 func GetGoctlHome() (string, error) {
+	if len(goctlHome) != 0 {
+		return goctlHome, nil
+	}
+
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err

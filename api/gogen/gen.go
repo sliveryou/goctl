@@ -15,7 +15,6 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/tal-tech/go-zero/core/logx"
-
 	apiformat "github.com/sliveryou/goctl/api/format"
 	"github.com/sliveryou/goctl/api/parser"
 	apiutil "github.com/sliveryou/goctl/api/util"
@@ -32,7 +31,11 @@ func GoCommand(c *cli.Context) error {
 	apiFile := c.String("api")
 	dir := c.String("dir")
 	namingStyle := c.String("style")
+	home := c.String("home")
 
+	if len(home) > 0 {
+		util.RegisterGoctlHome(home)
+	}
 	if len(apiFile) == 0 {
 		return errors.New("missing -api")
 	}

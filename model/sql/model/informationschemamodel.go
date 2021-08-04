@@ -5,7 +5,6 @@ import (
 	"sort"
 
 	"github.com/tal-tech/go-zero/core/stores/sqlx"
-
 	"github.com/sliveryou/goctl/model/sql/util"
 )
 

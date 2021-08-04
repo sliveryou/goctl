@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/tal-tech/go-zero/core/jsonx"
-
 	"github.com/sliveryou/goctl/rpc/execx"
 )
 

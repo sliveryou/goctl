@@ -10,9 +10,8 @@ import (
 	"text/template"
 
 	"github.com/logrusorgru/aurora"
-	"github.com/urfave/cli"
-
 	"github.com/sliveryou/goctl/util"
+	"github.com/urfave/cli"
 )
 
 const configTemplate = `package main

@@ -11,12 +11,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/urfave/cli"
-
 	"github.com/tal-tech/go-zero/core/errorx"
-
 	"github.com/sliveryou/goctl/api/util"
 	ctlutil "github.com/sliveryou/goctl/util"
+	"github.com/urfave/cli"
 )
 
 const (

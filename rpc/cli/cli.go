@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/urfave/cli"
-
 	"github.com/sliveryou/goctl/rpc/generator"
+	"github.com/sliveryou/goctl/util"
+	"github.com/urfave/cli"
 )
 
 // RPC is to generate rpc service code from a proto file by specifying a proto file using flag src,
@@ -18,9 +18,17 @@ func RPC(c *cli.Context) error {
 	out := c.String("dir")
 	style := c.String("style")
 	protoImportPath := c.StringSlice("proto_path")
+	goOptions := c.StringSlice("go_opt")
+	home := c.String("home")
+
+	if len(home) > 0 {
+		util.RegisterGoctlHome(home)
+	}
+
 	if len(src) == 0 {
 		return errors.New("missing -src")
 	}
+
 	if len(out) == 0 {
 		return errors.New("missing -dir")
 	}
@@ -30,7 +38,7 @@ func RPC(c *cli.Context) error {
 		return err
 	}
 
-	return g.Generate(src, out, protoImportPath)
+	return g.Generate(src, out, protoImportPath, goOptions...)
 }
 
 // RPCNew is to generate rpc greet service, this greet service can speed
@@ -42,6 +50,11 @@ func RPCNew(c *cli.Context) error {
 		return fmt.Errorf("unexpected ext: %s", ext)
 	}
 	style := c.String("style")
+	home := c.String("home")
+
+	if len(home) > 0 {
+		util.RegisterGoctlHome(home)
+	}
 
 	protoName := rpcname + ".proto"
 	filename := filepath.Join(".", rpcname, protoName)

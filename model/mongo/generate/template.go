@@ -3,10 +3,9 @@ package generate
 import (
 	"fmt"
 
-	"github.com/urfave/cli"
-
 	"github.com/sliveryou/goctl/model/mongo/template"
 	"github.com/sliveryou/goctl/util"
+	"github.com/urfave/cli"
 )
 
 const (

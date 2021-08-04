@@ -7,7 +7,6 @@ import (
 	"text/template"
 
 	"github.com/iancoleman/strcase"
-
 	"github.com/sliveryou/goctl/api/spec"
 )
 

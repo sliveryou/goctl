@@ -9,7 +9,6 @@ import (
 	"github.com/tal-tech/go-zero/core/conf"
 	"github.com/tal-tech/go-zero/core/hash"
 	"github.com/tal-tech/go-zero/core/logx"
-
 	"github.com/sliveryou/goctl/update/config"
 	"github.com/sliveryou/goctl/util"
 )

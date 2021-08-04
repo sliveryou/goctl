@@ -7,7 +7,6 @@ import (
 	"text/template"
 
 	"github.com/tal-tech/go-zero/core/stringx"
-
 	"github.com/sliveryou/goctl/api/spec"
 	apiutil "github.com/sliveryou/goctl/api/util"
 	"github.com/sliveryou/goctl/util"

@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
 	"github.com/sliveryou/goctl/api/parser"
 	"github.com/sliveryou/goctl/rpc/execx"
 )

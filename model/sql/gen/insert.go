@@ -1,16 +1,16 @@
 package gen
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/tal-tech/go-zero/core/collection"
-
 	"github.com/sliveryou/goctl/model/sql/template"
 	"github.com/sliveryou/goctl/util"
 	"github.com/sliveryou/goctl/util/stringx"
 )
 
-func genInsert(table Table, withCache bool) (string, string, error) {
+func genInsert(table Table, withCache, postgreSql bool) (string, string, error) {
 	keySet := collection.NewSet()
 	keyVariableSet := collection.NewSet()
 	for _, key := range table.UniqueCacheKey {
@@ -20,6 +20,7 @@ func genInsert(table Table, withCache bool) (string, string, error) {
 
 	expressions := make([]string, 0)
 	expressionValues := make([]string, 0)
+	var count int
 	for _, field := range table.Fields {
 		camel := field.Name.ToCamel()
 		if camel == "CreateTime" || camel == "UpdateTime" {
@@ -32,7 +33,12 @@ func genInsert(table Table, withCache bool) (string, string, error) {
 			}
 		}
 
-		expressions = append(expressions, "?")
+		count += 1
+		if postgreSql {
+			expressions = append(expressions, fmt.Sprintf("$%d", count))
+		} else {
+			expressions = append(expressions, "?")
+		}
 		expressionValues = append(expressionValues, "data."+camel)
 	}
 

@@ -6,12 +6,10 @@ import (
 	"strings"
 
 	"github.com/logrusorgru/aurora"
-	"github.com/urfave/cli"
-
 	"github.com/tal-tech/go-zero/core/logx"
-
 	"github.com/sliveryou/goctl/api/parser"
 	"github.com/sliveryou/goctl/util"
+	"github.com/urfave/cli"
 )
 
 // JavaCommand the generate java code command entrance

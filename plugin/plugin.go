@@ -13,12 +13,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/urfave/cli"
-
 	"github.com/sliveryou/goctl/api/parser"
 	"github.com/sliveryou/goctl/api/spec"
 	"github.com/sliveryou/goctl/rpc/execx"
 	"github.com/sliveryou/goctl/util"
+	"github.com/urfave/cli"
 )
 
 const pluginArg = "_plugin"

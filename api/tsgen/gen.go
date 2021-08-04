@@ -5,12 +5,10 @@ import (
 	"fmt"
 
 	"github.com/logrusorgru/aurora"
-	"github.com/urfave/cli"
-
 	"github.com/tal-tech/go-zero/core/logx"
-
 	"github.com/sliveryou/goctl/api/parser"
 	"github.com/sliveryou/goctl/util"
+	"github.com/urfave/cli"
 )
 
 // TsCommand provides the entry to generate typescript codes

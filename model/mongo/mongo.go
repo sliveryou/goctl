@@ -5,10 +5,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/urfave/cli"
-
 	"github.com/sliveryou/goctl/config"
 	"github.com/sliveryou/goctl/model/mongo/generate"
+	file "github.com/sliveryou/goctl/util"
+	"github.com/urfave/cli"
 )
 
 // Action provides the entry for goctl mongo code generation.
@@ -17,6 +17,12 @@ func Action(ctx *cli.Context) error {
 	c := ctx.Bool("cache")
 	o := strings.TrimSpace(ctx.String("dir"))
 	s := ctx.String("style")
+	home := ctx.String("home")
+
+	if len(home) > 0 {
+		file.RegisterGoctlHome(home)
+	}
+
 	if len(tp) == 0 {
 		return errors.New("missing type")
 	}
