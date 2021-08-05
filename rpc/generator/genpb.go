@@ -78,6 +78,8 @@ func (g *DefaultGenerator) GenPb(ctx DirContext, protoImportPath []string, proto
 		} else {
 			currentFileOpt = " --go_opt=M" + base + "=../" + proto.GoPackage
 		}
+	} else if proto.GoPackage == proto.Package.Name {
+		currentFileOpt = " --go_opt=M" + base + "=../" + proto.GoPackage
 	} else {
 		currentFileOpt = " --go_opt=M" + base + "=."
 	}

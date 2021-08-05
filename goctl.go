@@ -11,7 +11,6 @@ import (
 	"github.com/tal-tech/go-zero/core/load"
 	"github.com/tal-tech/go-zero/core/logx"
 	"github.com/tal-tech/go-zero/core/stat"
-
 	"github.com/sliveryou/goctl/api/apigen"
 	"github.com/sliveryou/goctl/api/dartgen"
 	"github.com/sliveryou/goctl/api/docgen"
@@ -35,7 +34,7 @@ import (
 )
 
 var (
-	buildVersion = "1.2.0"
+	buildVersion = "1.1.10"
 	commands     = []cli.Command{
 		{
 			Name:   "upgrade",
@@ -369,6 +368,10 @@ var (
 						cli.StringFlag{
 							Name:  "out, o",
 							Usage: "the target path of proto",
+						},
+						cli.StringFlag{
+							Name:  "home",
+							Usage: "the goctl home path of the template",
 						},
 					},
 					Action: rpc.RPCTemplate,

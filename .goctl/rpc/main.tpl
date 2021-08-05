@@ -8,6 +8,7 @@ import (
 	"github.com/tal-tech/go-zero/core/conf"
 	"github.com/tal-tech/go-zero/zrpc"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	"gitlab.33.cn/proof/backend-micro/pkg/errcode"
 	{{.imports}}
@@ -37,11 +38,15 @@ func main() {
 
 	var c config.Config
 	conf.MustLoad(*configFile, &c, conf.UseEnv())
+	c.MustSetUp()
+
 	ctx := svc.NewServiceContext(c)
 	srv := server.New{{.serviceNew}}Server(ctx)
 
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
 		{{.pkg}}.Register{{.service}}Server(grpcServer, srv)
+		// Register reflection service on gRPC server
+		reflection.Register(grpcServer)
 	})
 	defer s.Stop()
 

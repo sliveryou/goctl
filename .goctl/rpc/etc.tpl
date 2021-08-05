@@ -28,7 +28,7 @@ DB:
   User: "${DB_USER}"
   Password: "${DB_PASSWORD}"
   Host: "${DB_HOST}"
-  Port: ${DB_PORT}
+  Port: 3306
   Database: "${DB_DATABASE}"
   MaxIdleConns: 10
   MaxOpenConns: 20
