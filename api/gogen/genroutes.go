@@ -159,7 +159,7 @@ func genRouteImports(parentPkg string, api *spec.ApiSpec) string {
 	sort.Strings(imports)
 	projectSection := strings.Join(imports, "\n\t")
 	depSection := fmt.Sprintf("\"%s/rest\"", vars.ProjectOpenSourceURL)
-	return fmt.Sprintf("%s\n\n\t%s", projectSection, depSection)
+	return fmt.Sprintf("%s\n\n\t%s",  depSection, projectSection)
 }
 
 func getRoutes(api *spec.ApiSpec) ([]group, error) {

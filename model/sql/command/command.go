@@ -28,6 +28,7 @@ const (
 	flagStyle    = "style"
 	flagDatabase = "database"
 	flagSchema   = "schema"
+	flagHome     = "home"
 )
 
 var errNotMatched = errors.New("sql not matched")
@@ -40,7 +41,7 @@ func MysqlDDL(ctx *cli.Context) error {
 	idea := ctx.Bool(flagIdea)
 	style := ctx.String(flagStyle)
 	database := ctx.String(flagDatabase)
-	home := ctx.String("home")
+	home := ctx.String(flagHome)
 
 	if len(home) > 0 {
 		file.RegisterGoctlHome(home)
@@ -50,7 +51,7 @@ func MysqlDDL(ctx *cli.Context) error {
 		return err
 	}
 
-	return fromDDl(src, dir, cfg, cache, idea, database)
+	return fromDDL(src, dir, cfg, cache, idea, database)
 }
 
 // MySqlDataSource generates model code from datasource
@@ -102,7 +103,7 @@ func PostgreSqlDataSource(ctx *cli.Context) error {
 	return fromPostgreSqlDataSource(url, pattern, dir, schema, cfg, cache, idea)
 }
 
-func fromDDl(src, dir string, cfg *config.Config, cache, idea bool, database string) error {
+func fromDDL(src, dir string, cfg *config.Config, cache, idea bool, database string) error {
 	log := console.NewConsole(idea)
 	src = strings.TrimSpace(src)
 	if len(src) == 0 {

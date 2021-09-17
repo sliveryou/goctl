@@ -45,7 +45,7 @@ func TestRpcGenerate(t *testing.T) {
 
 	// case go path
 	t.Run("GOPATH", func(t *testing.T) {
-		err = g.Generate("./test.proto", projectDir, []string{common, src}, "Mbase/common.proto=./base")
+		err = g.Generate("./test.proto", projectDir, []string{common}, "Mbase/common.proto=./base")
 		assert.Nil(t, err)
 		_, err = execx.Run("go test "+projectName, projectDir)
 		if err != nil {
@@ -66,7 +66,7 @@ func TestRpcGenerate(t *testing.T) {
 		}
 
 		projectDir = filepath.Join(workDir, projectName)
-		err = g.Generate("./test.proto", projectDir, []string{common, src}, "Mbase/common.proto=./base")
+		err = g.Generate("./test.proto", projectDir, []string{common}, "Mbase/common.proto=./base")
 		assert.Nil(t, err)
 		_, err = execx.Run("go test "+projectName, projectDir)
 		if err != nil {

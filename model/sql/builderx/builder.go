@@ -10,17 +10,17 @@ import (
 
 const dbTag = "db"
 
-// NewEq wraps builder.Eq
+// NewEq wraps builder.Eq.
 func NewEq(in interface{}) builder.Eq {
 	return builder.Eq(ToMap(in))
 }
 
-// NewGt wraps builder.Gt
+// NewGt wraps builder.Gt.
 func NewGt(in interface{}) builder.Gt {
 	return builder.Gt(ToMap(in))
 }
 
-// ToMap converts interface into map
+// ToMap converts interface into map.
 func ToMap(in interface{}) map[string]interface{} {
 	out := make(map[string]interface{})
 	v := reflect.ValueOf(in)
@@ -81,7 +81,7 @@ func FieldNames(in interface{}) []string {
 	return out
 }
 
-// RawFieldNames converts golang struct field into slice string
+// RawFieldNames converts golang struct field into slice string.
 func RawFieldNames(in interface{}, postgresSql ...bool) []string {
 	out := make([]string, 0)
 	v := reflect.ValueOf(in)
@@ -121,10 +121,11 @@ func RawFieldNames(in interface{}, postgresSql ...bool) []string {
 	return out
 }
 
+// PostgreSqlJoin concatenates the given elements into a string.
 func PostgreSqlJoin(elems []string) string {
-	var b = new(strings.Builder)
+	b := new(strings.Builder)
 	for index, e := range elems {
-		b.WriteString(fmt.Sprintf("%s = $%d, ", e, index+1))
+		b.WriteString(fmt.Sprintf("%s = $%d, ", e, index+2))
 	}
 
 	if b.Len() == 0 {

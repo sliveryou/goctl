@@ -47,7 +47,7 @@ type (
 )
 
 // Parse parses ddl into golang structure
-func Parse(filename string, database string) ([]*Table, error) {
+func Parse(filename, database string) ([]*Table, error) {
 	p := parser.NewParser()
 	tables, err := p.From(filename)
 	if err != nil {
@@ -146,7 +146,7 @@ func Parse(filename string, database string) ([]*Table, error) {
 
 		list = append(list, &Table{
 			Name:        stringx.From(e.Name),
-			Db: 		 stringx.From(database),
+			Db:          stringx.From(database),
 			PrimaryKey:  primaryKey,
 			UniqueIndex: uniqueIndex,
 			Fields:      fields,
@@ -180,6 +180,7 @@ func convertColumns(columns []*parser.Column, primaryColumn string) (Primary, ma
 	var (
 		primaryKey Primary
 		fieldM     = make(map[string]*Field)
+		log        = console.NewColorConsole()
 	)
 
 	for _, column := range columns {
@@ -194,8 +195,12 @@ func convertColumns(columns []*parser.Column, primaryColumn string) (Primary, ma
 
 		if column.Constraint != nil {
 			comment = column.Constraint.Comment
-			isDefaultNull = !column.Constraint.HasDefaultValue
-			if column.Name == primaryColumn && column.Constraint.AutoIncrement {
+			isDefaultNull = !column.Constraint.NotNull
+			if !column.Constraint.NotNull && column.Constraint.HasDefaultValue {
+				isDefaultNull = false
+			}
+
+			if column.Name == primaryColumn {
 				isDefaultNull = false
 			}
 		}
@@ -203,6 +208,16 @@ func convertColumns(columns []*parser.Column, primaryColumn string) (Primary, ma
 		dataType, err := converter.ConvertDataType(column.DataType.Type(), isDefaultNull)
 		if err != nil {
 			return Primary{}, nil, err
+		}
+
+		if column.Constraint != nil {
+			if column.Name == primaryColumn {
+				if !column.Constraint.AutoIncrement && dataType == "int64" {
+					log.Warning("%s: The primary key is recommended to add constraint `AUTO_INCREMENT`", column.Name)
+				}
+			} else if column.Constraint.NotNull && !column.Constraint.HasDefaultValue {
+				log.Warning("%s: The column is recommended to add constraint `DEFAULT`", column.Name)
+			}
 		}
 
 		var field Field
