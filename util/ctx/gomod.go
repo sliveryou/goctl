@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/tal-tech/go-zero/core/jsonx"
 	"github.com/sliveryou/goctl/rpc/execx"
 	"github.com/sliveryou/goctl/util"
+	"github.com/tal-tech/go-zero/core/jsonx"
 )
 
 // Module contains the relative data of go module,

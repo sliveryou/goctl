@@ -14,12 +14,12 @@ import (
 	"github.com/logrusorgru/aurora"
 	"github.com/urfave/cli"
 
-	"github.com/tal-tech/go-zero/core/logx"
 	apiformat "github.com/sliveryou/goctl/api/format"
 	"github.com/sliveryou/goctl/api/parser"
 	apiutil "github.com/sliveryou/goctl/api/util"
 	"github.com/sliveryou/goctl/config"
 	"github.com/sliveryou/goctl/util"
+	"github.com/tal-tech/go-zero/core/logx"
 )
 
 const tmpFile = "%s-%d"
@@ -32,6 +32,13 @@ func GoCommand(c *cli.Context) error {
 	dir := c.String("dir")
 	namingStyle := c.String("style")
 	home := c.String("home")
+	remote := c.String("remote")
+	if len(remote) > 0 {
+		repo, _ := util.CloneIntoGitHome(remote)
+		if len(repo) > 0 {
+			home = repo
+		}
+	}
 
 	if len(home) > 0 {
 		util.RegisterGoctlHome(home)

@@ -2,15 +2,20 @@ package upgrade
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/sliveryou/goctl/rpc/execx"
 	"github.com/urfave/cli"
 )
 
 // Upgrade gets the latest goctl by
-// go get -u github.com/sliveryou/goctl
+// go install github.com/sliveryou/goctl@latest
 func Upgrade(_ *cli.Context) error {
-	info, err := execx.Run("GO111MODULE=on GOPROXY=https://goproxy.cn/,direct go get -u github.com/sliveryou/goctl", "")
+	cmd := `GO111MODULE=on GOPROXY=https://goproxy.cn/,direct go install github.com/sliveryou/goctl@latest`
+	if runtime.GOOS == "windows" {
+		cmd = `set GOPROXY=https://goproxy.cn,direct && go install github.com/sliveryou/goctl@latest`
+	}
+	info, err := execx.Run(cmd, "")
 	if err != nil {
 		return err
 	}

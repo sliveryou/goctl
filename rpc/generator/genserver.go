@@ -5,12 +5,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/tal-tech/go-zero/core/collection"
 	conf "github.com/sliveryou/goctl/config"
 	"github.com/sliveryou/goctl/rpc/parser"
 	"github.com/sliveryou/goctl/util"
 	"github.com/sliveryou/goctl/util/format"
 	"github.com/sliveryou/goctl/util/stringx"
+	"github.com/tal-tech/go-zero/core/collection"
 )
 
 const (

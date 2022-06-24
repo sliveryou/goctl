@@ -3,10 +3,10 @@ package gen
 import (
 	"strings"
 
-	"github.com/tal-tech/go-zero/core/collection"
 	"github.com/sliveryou/goctl/model/sql/template"
 	"github.com/sliveryou/goctl/util"
 	"github.com/sliveryou/goctl/util/stringx"
+	"github.com/tal-tech/go-zero/core/collection"
 )
 
 func genDelete(table Table, withCache, postgreSql bool) (string, string, error) {

@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/tal-tech/go-zero/core/collection"
 	conf "github.com/sliveryou/goctl/config"
 	"github.com/sliveryou/goctl/rpc/execx"
 	"github.com/sliveryou/goctl/rpc/parser"
+	"github.com/tal-tech/go-zero/core/collection"
 )
 
 const googleProtocGenGoErr = `--go_out: protoc-gen-go: plugins are not supported; use 'protoc --go-grpc_out=...' to generate gRPC`
@@ -93,7 +93,7 @@ func (g *DefaultGenerator) GenPb(ctx DirContext, protoImportPath []string, proto
 	_, err := execx.Run(command, "")
 	if err != nil {
 		if strings.Contains(err.Error(), googleProtocGenGoErr) {
-			return errors.New(`Unsupported plugin protoc-gen-go which installed from the following source:
+			return errors.New(`unsupported plugin protoc-gen-go which installed from the following source:
 google.golang.org/protobuf/cmd/protoc-gen-go, 
 github.com/protocolbuffers/protobuf-go/cmd/protoc-gen-go;
 

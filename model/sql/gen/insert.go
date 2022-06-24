@@ -4,15 +4,17 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tal-tech/go-zero/core/collection"
 	"github.com/sliveryou/goctl/model/sql/template"
 	"github.com/sliveryou/goctl/util"
 	"github.com/sliveryou/goctl/util/stringx"
+	"github.com/tal-tech/go-zero/core/collection"
 )
 
 func genInsert(table Table, withCache, postgreSql bool) (string, string, error) {
 	keySet := collection.NewSet()
 	keyVariableSet := collection.NewSet()
+	keySet.AddStr(table.PrimaryCacheKey.DataKeyExpression)
+	keyVariableSet.AddStr(table.PrimaryCacheKey.KeyLeft)
 	for _, key := range table.UniqueCacheKey {
 		keySet.AddStr(key.DataKeyExpression)
 		keyVariableSet.AddStr(key.KeyLeft)

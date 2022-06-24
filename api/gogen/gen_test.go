@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/sliveryou/goctl/api/parser"
 	"github.com/sliveryou/goctl/rpc/execx"
+	"github.com/stretchr/testify/assert"
 )
 
 const testApiTemplate = `
@@ -78,7 +78,7 @@ service A-api {
   @server(
     handler: NoResponseHandler
   )
-  get /greet/get(Request) returns
+  get /greet/get(Request)
 }
 `
 

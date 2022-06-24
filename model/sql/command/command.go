@@ -6,15 +6,15 @@ import (
 	"strings"
 
 	"github.com/go-sql-driver/mysql"
-	"github.com/tal-tech/go-zero/core/logx"
-	"github.com/tal-tech/go-zero/core/stores/postgres"
-	"github.com/tal-tech/go-zero/core/stores/sqlx"
 	"github.com/sliveryou/goctl/config"
 	"github.com/sliveryou/goctl/model/sql/gen"
 	"github.com/sliveryou/goctl/model/sql/model"
 	"github.com/sliveryou/goctl/model/sql/util"
 	file "github.com/sliveryou/goctl/util"
 	"github.com/sliveryou/goctl/util/console"
+	"github.com/tal-tech/go-zero/core/logx"
+	"github.com/tal-tech/go-zero/core/stores/postgres"
+	"github.com/tal-tech/go-zero/core/stores/sqlx"
 	"github.com/urfave/cli"
 )
 
@@ -42,7 +42,13 @@ func MysqlDDL(ctx *cli.Context) error {
 	style := ctx.String(flagStyle)
 	database := ctx.String(flagDatabase)
 	home := ctx.String(flagHome)
-
+	remote := ctx.String("remote")
+	if len(remote) > 0 {
+		repo, _ := file.CloneIntoGitHome(remote)
+		if len(repo) > 0 {
+			home = repo
+		}
+	}
 	if len(home) > 0 {
 		file.RegisterGoctlHome(home)
 	}
@@ -62,7 +68,13 @@ func MySqlDataSource(ctx *cli.Context) error {
 	idea := ctx.Bool(flagIdea)
 	style := ctx.String(flagStyle)
 	home := ctx.String("home")
-
+	remote := ctx.String("remote")
+	if len(remote) > 0 {
+		repo, _ := file.CloneIntoGitHome(remote)
+		if len(repo) > 0 {
+			home = repo
+		}
+	}
 	if len(home) > 0 {
 		file.RegisterGoctlHome(home)
 	}
@@ -85,7 +97,13 @@ func PostgreSqlDataSource(ctx *cli.Context) error {
 	style := ctx.String(flagStyle)
 	schema := ctx.String(flagSchema)
 	home := ctx.String("home")
-
+	remote := ctx.String("remote")
+	if len(remote) > 0 {
+		repo, _ := file.CloneIntoGitHome(remote)
+		if len(repo) > 0 {
+			home = repo
+		}
+	}
 	if len(home) > 0 {
 		file.RegisterGoctlHome(home)
 	}

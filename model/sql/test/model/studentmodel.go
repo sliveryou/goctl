@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sliveryou/goctl/model/sql/builderx"
 	"github.com/tal-tech/go-zero/core/stores/cache"
 	"github.com/tal-tech/go-zero/core/stores/sqlc"
 	"github.com/tal-tech/go-zero/core/stores/sqlx"
 	"github.com/tal-tech/go-zero/core/stringx"
-	"github.com/sliveryou/goctl/model/sql/builderx"
 )
 
 var (

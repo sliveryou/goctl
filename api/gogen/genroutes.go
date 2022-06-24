@@ -8,12 +8,12 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/tal-tech/go-zero/core/collection"
 	"github.com/sliveryou/goctl/api/spec"
 	"github.com/sliveryou/goctl/config"
 	"github.com/sliveryou/goctl/util"
 	"github.com/sliveryou/goctl/util/format"
 	"github.com/sliveryou/goctl/vars"
+	"github.com/tal-tech/go-zero/core/collection"
 )
 
 const (
@@ -27,24 +27,27 @@ import (
 	{{.importPackages}}
 )
 
-func RegisterHandlers(engine *rest.Server, serverCtx *svc.ServiceContext) {
+func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	{{.routesAdditions}}
 }
 `
 	routesAdditionTemplate = `
-	engine.AddRoutes(
-		{{.routes}} {{.jwt}}{{.signature}}
+	server.AddRoutes(
+		{{.routes}} {{.jwt}}{{.signature}} {{.prefix}}
 	)
 `
 )
 
 var mapping = map[string]string{
-	"delete": "http.MethodDelete",
-	"get":    "http.MethodGet",
-	"head":   "http.MethodHead",
-	"post":   "http.MethodPost",
-	"put":    "http.MethodPut",
-	"patch":  "http.MethodPatch",
+	"delete":  "http.MethodDelete",
+	"get":     "http.MethodGet",
+	"head":    "http.MethodHead",
+	"post":    "http.MethodPost",
+	"put":     "http.MethodPut",
+	"patch":   "http.MethodPatch",
+	"connect": "http.MethodConnect",
+	"options": "http.MethodOptions",
+	"trace":   "http.MethodTrace",
 }
 
 type (
@@ -54,6 +57,7 @@ type (
 		signatureEnabled bool
 		authName         string
 		middlewares      []string
+		prefix           string
 	}
 	route struct {
 		method  string
@@ -87,9 +91,13 @@ func genRoutes(dir, rootPkg string, cfg *config.Config, api *spec.ApiSpec) error
 		if g.jwtEnabled {
 			jwt = fmt.Sprintf("\n rest.WithJwt(serverCtx.Config.%s.AccessSecret),", g.authName)
 		}
-		var signature string
+		var signature, prefix string
 		if g.signatureEnabled {
 			signature = "\n rest.WithSignature(serverCtx.Config.Signature),"
+		}
+		if len(g.prefix) > 0 {
+			prefix = fmt.Sprintf(`
+rest.WithPrefix("%s"),`, g.prefix)
 		}
 
 		var routes string
@@ -111,6 +119,7 @@ func genRoutes(dir, rootPkg string, cfg *config.Config, api *spec.ApiSpec) error
 			"routes":    routes,
 			"jwt":       jwt,
 			"signature": signature,
+			"prefix":    prefix,
 		}); err != nil {
 			return err
 		}
@@ -159,7 +168,7 @@ func genRouteImports(parentPkg string, api *spec.ApiSpec) string {
 	sort.Strings(imports)
 	projectSection := strings.Join(imports, "\n\t")
 	depSection := fmt.Sprintf("\"%s/rest\"", vars.ProjectOpenSourceURL)
-	return fmt.Sprintf("%s\n\n\t%s",  depSection, projectSection)
+	return fmt.Sprintf("%s\n\n\t%s", depSection, projectSection)
 }
 
 func getRoutes(api *spec.ApiSpec) ([]group, error) {
@@ -197,9 +206,15 @@ func getRoutes(api *spec.ApiSpec) ([]group, error) {
 		}
 		middleware := g.GetAnnotation("middleware")
 		if len(middleware) > 0 {
-			for _, item := range strings.Split(middleware, ",") {
-				groupedRoutes.middlewares = append(groupedRoutes.middlewares, item)
-			}
+			groupedRoutes.middlewares = append(groupedRoutes.middlewares,
+				strings.Split(middleware, ",")...)
+		}
+		prefix := g.GetAnnotation(spec.RoutePrefixKey)
+		prefix = strings.ReplaceAll(prefix, `"`, "")
+		prefix = strings.TrimSpace(prefix)
+		if len(prefix) > 0 {
+			prefix = path.Join("/", prefix)
+			groupedRoutes.prefix = prefix
 		}
 		routes = append(routes, groupedRoutes)
 	}

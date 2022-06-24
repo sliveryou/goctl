@@ -4,8 +4,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/tal-tech/go-zero/core/logx"
 	"github.com/sliveryou/goctl/api/parser"
+	"github.com/tal-tech/go-zero/core/logx"
 	"github.com/urfave/cli"
 )
 
@@ -25,6 +25,7 @@ func DartCommand(c *cli.Context) error {
 		return err
 	}
 
+	api.Service = api.Service.JoinPrefix()
 	if !strings.HasSuffix(dir, "/") {
 		dir = dir + "/"
 	}

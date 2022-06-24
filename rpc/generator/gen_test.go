@@ -7,11 +7,12 @@ import (
 	"strings"
 	"testing"
 
+	conf "github.com/sliveryou/goctl/config"
+	"github.com/sliveryou/goctl/rpc/execx"
+	"github.com/sliveryou/goctl/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/tal-tech/go-zero/core/logx"
 	"github.com/tal-tech/go-zero/core/stringx"
-	conf "github.com/sliveryou/goctl/config"
-	"github.com/sliveryou/goctl/rpc/execx"
 )
 
 var cfg = &conf.Config{
@@ -57,7 +58,7 @@ func TestRpcGenerate(t *testing.T) {
 
 	// case go mod
 	t.Run("GOMOD", func(t *testing.T) {
-		workDir := t.TempDir()
+		workDir := util.MustTempDir()
 		name := filepath.Base(workDir)
 		_, err = execx.Run("go mod init "+name, workDir)
 		if err != nil {

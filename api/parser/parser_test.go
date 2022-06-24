@@ -3,8 +3,8 @@ package parser
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/sliveryou/goctl/api/spec"
+	"github.com/stretchr/testify/assert"
 )
 
 var testApi = "// syntax doc\nsyntax = \"v1\" // syntax comment\n\n// type doc\ntype Request {\n\tName string `path:\"name,options=you|me\"`\n}\n\ntype Response {\n\tMessage string `json:\"message\"`\n}\n\n// service doc\nservice greet-api {\n\t// handler doc\n\t@handler GreetHandler // handler comment\n\tget /from/:name(Request) returns (Response);\n}"

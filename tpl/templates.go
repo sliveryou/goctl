@@ -5,15 +5,16 @@ import (
 	"path/filepath"
 
 	"github.com/logrusorgru/aurora"
-	"github.com/tal-tech/go-zero/core/errorx"
 	"github.com/sliveryou/goctl/api/apigen"
 	"github.com/sliveryou/goctl/api/gogen"
+	apinew "github.com/sliveryou/goctl/api/new"
 	"github.com/sliveryou/goctl/docker"
 	"github.com/sliveryou/goctl/kube"
 	mongogen "github.com/sliveryou/goctl/model/mongo/generate"
 	modelgen "github.com/sliveryou/goctl/model/sql/gen"
 	rpcgen "github.com/sliveryou/goctl/rpc/generator"
 	"github.com/sliveryou/goctl/util"
+	"github.com/tal-tech/go-zero/core/errorx"
 	"github.com/urfave/cli"
 )
 
@@ -47,6 +48,9 @@ func GenTemplates(ctx *cli.Context) error {
 		},
 		func() error {
 			return apigen.GenTemplates(ctx)
+		},
+		func() error {
+			return apinew.GenTemplates(ctx)
 		},
 	); err != nil {
 		return err
@@ -97,6 +101,9 @@ func CleanTemplates(ctx *cli.Context) error {
 		func() error {
 			return apigen.Clean()
 		},
+		func() error {
+			return apinew.Clean()
+		},
 	)
 	if err != nil {
 		return err
@@ -135,6 +142,8 @@ func UpdateTemplates(ctx *cli.Context) (err error) {
 		return mongogen.Update()
 	case apigen.Category():
 		return apigen.Update()
+	case apinew.Category():
+		return apinew.Update()
 	default:
 		err = fmt.Errorf("unexpected category: %s", category)
 		return
@@ -170,6 +179,8 @@ func RevertTemplates(ctx *cli.Context) (err error) {
 		return mongogen.RevertTemplate(filename)
 	case apigen.Category():
 		return apigen.RevertTemplate(filename)
+	case apinew.Category():
+		return apinew.RevertTemplate(filename)
 	default:
 		err = fmt.Errorf("unexpected category: %s", category)
 		return

@@ -4,25 +4,24 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/logrusorgru/aurora"
-	"go.uber.org/atomic"
+
+	"github.com/sliveryou/goctl/internal/version"
 )
 
 // NL defines a new line
 const (
 	NL       = "\n"
 	goctlDir = ".goctl"
+	gitDir   = ".git"
 )
 
-var (
-	// TemplateFolder the goctl template folder
-	TemplateFolder atomic.String
-	goctlHome string
-)
+var goctlHome string
 
 // RegisterGoctlHome register goctl home path
 func RegisterGoctlHome(home string) {
@@ -85,18 +84,42 @@ func GetGoctlHome() (string, error) {
 	return filepath.Join(home, goctlDir), nil
 }
 
-// GetTemplateDir returns the category path value in GoctlHome where could get it by GetGoctlHome
-func GetTemplateDir(category string) (string, error) {
-	dir := TemplateFolder.Load()
-	if dir == "" {
-		goctlHome, err := GetGoctlHome()
-		if err != nil {
-			return "", err
-		}
-		dir = goctlHome
+// GetGitHome returns the git home of goctl.
+func GetGitHome() (string, error) {
+	goctlH, err := GetGoctlHome()
+	if err != nil {
+		return "", err
 	}
 
-	return filepath.Join(dir, category), nil
+	return filepath.Join(goctlH, gitDir), nil
+}
+
+// GetTemplateDir returns the category path value in GoctlHome where could get it by GetGoctlHome
+func GetTemplateDir(category string) (string, error) {
+	home, err := GetGoctlHome()
+	if err != nil {
+		return "", err
+	}
+	if home == goctlHome {
+		// backward compatible, it will be removed in the feature
+		// backward compatible start
+		beforeTemplateDir := filepath.Join(home, version.GetGoctlVersion(), category)
+		fs, _ := ioutil.ReadDir(beforeTemplateDir)
+		var hasContent bool
+		for _, e := range fs {
+			if e.Size() > 0 {
+				hasContent = true
+			}
+		}
+		if hasContent {
+			return beforeTemplateDir, nil
+		}
+		// backward compatible end
+
+		return filepath.Join(home, category), nil
+	}
+
+	return filepath.Join(home, version.GetGoctlVersion(), category), nil
 }
 
 // InitTemplates creates template files GoctlHome where could get it by GetGoctlHome
@@ -157,6 +180,24 @@ func LoadTemplate(category, file, builtin string) (string, error) {
 	return string(content), nil
 }
 
+// SameFile compares the between path if the same path,
+// it maybe the same path in case case-ignore, such as:
+// /Users/go_zero and /Users/Go_zero, as far as we know,
+// this case maybe appear on macOS and Windows.
+func SameFile(path1, path2 string) (bool, error) {
+	stat1, err := os.Stat(path1)
+	if err != nil {
+		return false, err
+	}
+
+	stat2, err := os.Stat(path2)
+	if err != nil {
+		return false, err
+	}
+
+	return os.SameFile(stat1, stat2), nil
+}
+
 func createTemplate(file, content string, force bool) error {
 	if FileExists(file) && !force {
 		return nil
@@ -170,4 +211,14 @@ func createTemplate(file, content string, force bool) error {
 
 	_, err = f.WriteString(content)
 	return err
+}
+
+// MustTempDir creates a temporary directory
+func MustTempDir() string {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return dir
 }
