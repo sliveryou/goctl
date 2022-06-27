@@ -7,5 +7,5 @@
 
 ## 重要！
 
-原仓库地址：https://github.com/tal-tech/go-zero/tree/master/tools/goctl  
+原仓库地址：https://github.com/zeromicro/go-zero/tree/master/tools/goctl  
 主要根据原仓库的 goctl 对 api 和 rpc 代码的生成等做了一些定制化的修改
