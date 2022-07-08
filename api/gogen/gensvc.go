@@ -56,6 +56,11 @@ func genServiceContext(dir, rootPkg string, cfg *config.Config, api *spec.ApiSpe
 		configImport += fmt.Sprintf("\n\t\"%s/rest\"", vars.ProjectOpenSourceURL)
 	}
 
+	serviceName := api.Service.Name
+	if i := strings.Index(serviceName, "service"); i > 0 {
+		serviceName = strings.TrimSuffix(serviceName[:i], "-")
+	}
+
 	return genFile(fileGenConfig{
 		dir:             dir,
 		subdir:          contextDir,
@@ -69,6 +74,7 @@ func genServiceContext(dir, rootPkg string, cfg *config.Config, api *spec.ApiSpe
 			"config":               "config.Config",
 			"middleware":           middlewareStr,
 			"middlewareAssignment": middlewareAssignment,
+			"serviceName":          serviceName,
 		},
 	})
 }

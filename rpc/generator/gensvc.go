@@ -3,11 +3,13 @@ package generator
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	conf "github.com/sliveryou/goctl/config"
 	"github.com/sliveryou/goctl/rpc/parser"
 	"github.com/sliveryou/goctl/util"
 	"github.com/sliveryou/goctl/util/format"
+	"github.com/sliveryou/goctl/util/stringx"
 )
 
 const svcTemplate = `package svc
@@ -40,7 +42,13 @@ func (g *DefaultGenerator) GenSvc(ctx DirContext, _ parser.Proto, cfg *conf.Conf
 		return err
 	}
 
+	serviceName := strings.ToLower(stringx.From(ctx.GetServiceName().Source()).ToCamel())
+	if i := strings.Index(serviceName, "service"); i > 0 {
+		serviceName = strings.TrimSuffix(serviceName[:i], "-")
+	}
+
 	return util.With("svc").GoFmt(true).Parse(text).SaveTo(map[string]interface{}{
-		"imports": fmt.Sprintf(`"%v"`, ctx.GetConfig().Package),
+		"imports":     fmt.Sprintf(`"%v"`, ctx.GetConfig().Package),
+		"serviceName": serviceName,
 	}, fileName, false)
 }

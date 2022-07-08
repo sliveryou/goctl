@@ -3,7 +3,11 @@ package gogen
 import (
 	"fmt"
 	"path"
+	"regexp"
+	"strconv"
 	"strings"
+
+	"github.com/tal-tech/go-zero/core/stringx"
 
 	"github.com/sliveryou/goctl/api/spec"
 	"github.com/sliveryou/goctl/config"
@@ -61,6 +65,8 @@ type handlerInfo struct {
 	HasRequest     bool
 	HasSecurity    bool
 	After1_1_10    bool
+	HasRequestBody bool
+	SwagParams     []swagParam
 }
 
 func genHandler(dir, rootPkg string, cfg *config.Config, group spec.Group, route spec.Route) error {
@@ -96,12 +102,18 @@ func genHandler(dir, rootPkg string, cfg *config.Config, group spec.Group, route
 	goctlVersion := version.GetGoctlVersion()
 	// todo(anqiansong): This will be removed after a certain number of production versions of goctl (probably 5)
 	after1_1_10 := version.IsVersionGreaterThan(goctlVersion, "1.1.10")
+
+	reg := regexp.MustCompile(`/:([^/]+)`)
+	pathName := reg.ReplaceAllString(strings.TrimSpace(route.Path), "/{${1}}")
+	methodName := strings.ToLower(strings.TrimSpace(route.Method))
+	sps := getSwagParams(route)
+
 	return doGenToFile(dir, handler, cfg, group, route, handlerInfo{
 		PkgName:        pkgName,
 		ImportPackages: genHandlerImports(group, route, parentPkg),
 		HandlerName:    handler,
-		PathName:       strings.TrimSpace(route.Path),
-		MethodName:     strings.ToLower(strings.TrimSpace(route.Method)),
+		PathName:       pathName,
+		MethodName:     methodName,
 		Tag:            tag,
 		Summary:        summary,
 		ResponseType:   util.Title(route.ResponseTypeName()),
@@ -113,6 +125,8 @@ func genHandler(dir, rootPkg string, cfg *config.Config, group spec.Group, route
 		HasRequest:     len(route.RequestTypeName()) > 0,
 		HasSecurity:    hasSecurity,
 		After1_1_10:    after1_1_10,
+		HasRequestBody: len(route.RequestTypeName()) > 0 && len(sps) == 0,
+		SwagParams:     sps,
 	})
 }
 
@@ -203,4 +217,99 @@ func getLogicName(route spec.Route) string {
 	}
 
 	return handler + "Logic"
+}
+
+type swagParam struct {
+	ParamName   string
+	ParamType   string
+	DataType    string
+	IsMandatory string
+	Comment     string
+	Attribute   string
+}
+
+func getSwagParams(route spec.Route) []swagParam {
+	rt := route.RequestType
+	methodName := strings.ToLower(strings.TrimSpace(route.Method))
+
+	if rt != nil && methodName == "get" {
+		if ds, ok := rt.(spec.DefineStruct); ok {
+			return parseSwagParams(ds)
+		}
+	}
+
+	return nil
+}
+
+func parseSwagParams(ds spec.DefineStruct) []swagParam {
+	var sps []swagParam
+
+	for _, m := range ds.Members {
+		switch mt := m.Type.(type) {
+		case spec.PrimitiveType:
+			tags, err := spec.Parse(m.Tag)
+			if err != nil {
+				fmt.Printf("request type: %s parse tags err, err: %v\n", ds.RawName, err)
+				break
+			}
+			for _, tag := range tags.Tags() {
+				if tag.Key == "form" {
+					sps = append(sps, swagParam{
+						ParamName:   tag.Name,
+						ParamType:   "query",
+						DataType:    getDataType(mt.RawName),
+						IsMandatory: strconv.FormatBool(!stringx.Contains(tag.Options, "optional")),
+						Comment:     getComment(m.Comment),
+					})
+					break
+				}
+			}
+		case spec.ArrayType:
+			if vt, ok := mt.Value.(spec.PrimitiveType); ok {
+				tags, err := spec.Parse(m.Tag)
+				if err != nil {
+					fmt.Printf("request type: %s parse tags err, err: %v\n", ds.RawName, err)
+					break
+				}
+				for _, tag := range tags.Tags() {
+					if tag.Key == "form" {
+						sps = append(sps, swagParam{
+							ParamName:   tag.Name,
+							ParamType:   "query",
+							DataType:    "[]" + getDataType(vt.RawName),
+							IsMandatory: strconv.FormatBool(!stringx.Contains(tag.Options, "optional")),
+							Comment:     getComment(m.Comment),
+							Attribute:   "collectionFormat(multi)",
+						})
+						break
+					}
+				}
+			}
+		case spec.DefineStruct:
+			if m.IsInline {
+				sps = append(sps, parseSwagParams(mt)...)
+			}
+		}
+	}
+
+	return sps
+}
+
+func getDataType(dataType string) string {
+	switch dataType {
+	case "string":
+		return "string"
+	case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64":
+		return "integer"
+	case "float32", "float64", "complex64", "complex128":
+		return "number"
+	case "bool":
+		return "boolean"
+	}
+
+	return ""
+}
+
+func getComment(comment string) string {
+	return strings.TrimSpace(strings.TrimPrefix(comment, "//"))
 }
