@@ -18,6 +18,7 @@ import (
 	"github.com/sliveryou/goctl/api/javagen"
 	"github.com/sliveryou/goctl/api/ktgen"
 	"github.com/sliveryou/goctl/api/new"
+	"github.com/sliveryou/goctl/api/protogen"
 	"github.com/sliveryou/goctl/api/tsgen"
 	"github.com/sliveryou/goctl/api/validate"
 	"github.com/sliveryou/goctl/bug"
@@ -165,6 +166,21 @@ var commands = []cli.Command{
 					},
 				},
 				Action: gogen.GoCommand,
+			},
+			{
+				Name:  "proto",
+				Usage: "generate proto files for provided api in yaml file",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "dir",
+						Usage: "the target dir",
+					},
+					cli.StringFlag{
+						Name:  "api",
+						Usage: "the api file",
+					},
+				},
+				Action: protogen.ProtoCommand,
 			},
 			{
 				Name:  "java",

@@ -84,11 +84,11 @@ func genHandler(dir, rootPkg string, cfg *config.Config, group spec.Group, route
 	}
 	tag := "Tag"
 	if a := group.GetAnnotation("tag"); a != "" {
-		tag = strings.TrimSuffix(strings.TrimPrefix(a, "\""), "\"")
+		tag = strings.Trim(a, `"`)
 	}
 	summary := "Summary"
 	if route.AtDoc.Properties != nil {
-		summary = strings.TrimSuffix(strings.TrimPrefix(route.AtDoc.Properties["summary"], "\""), "\"")
+		summary = strings.Trim(route.AtDoc.Properties["summary"], `"`)
 	}
 	hasSecurity := false
 	if ja := group.GetAnnotation("jwt"); ja != "" {
