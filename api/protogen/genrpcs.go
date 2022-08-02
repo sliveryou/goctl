@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/logrusorgru/aurora"
+
 	"github.com/sliveryou/goctl/api/spec"
 )
 
@@ -11,18 +13,27 @@ import (
 func BuildRPCs(api *spec.ApiSpec) (string, bool) {
 	var builder strings.Builder
 	var hasEmpty bool
+	methodMap := make(map[string]struct{})
 
 	builder.WriteString("// RPC 相关服务\nservice RPC {\n")
-	for _, group := range api.Service.Groups {
+	for i, group := range api.Service.Groups {
+		if i > 0 {
+			builder.WriteByte('\n')
+		}
 		for _, route := range group.Routes {
 			r := parseRPC(route)
-			builder.WriteString(fmt.Sprintf("%s%s\n%srpc %s (%s) returns (%s);\n",
-				indent, r.Doc, indent, r.Method, r.Request, r.Response))
-			if r.HasEmpty {
-				hasEmpty = true
+			if _, ok := methodMap[r.Method]; !ok {
+				builder.WriteString(fmt.Sprintf("%s%s\n%srpc %s (%s) returns (%s);\n",
+					indent, r.Doc, indent, r.Method, r.Request, r.Response))
+				if r.HasEmpty {
+					hasEmpty = true
+				}
+				methodMap[r.Method] = struct{}{}
+			} else {
+				fmt.Println(aurora.Red(fmt.Sprintf("duplicate handler name, handler: %s, method: %s, path: %s, please rename it.",
+					route.Handler, route.Method, route.Path)))
 			}
 		}
-		builder.WriteByte('\n')
 	}
 	builder.WriteByte('}')
 

@@ -70,12 +70,16 @@ func parseMessageFields(ds spec.DefineStruct) []messageField {
 	var mfs []messageField
 
 	for _, m := range ds.Members {
-		tagName := m.Name
+		var tagName string
 		if tag := getUsefulTag(m.Tag); tag != nil {
 			tagName = tag.Name
 		}
 		if tagName == "" {
-			tagName = strcase.ToSnake(m.Type.Name())
+			if m.Name == "" {
+				tagName = strcase.ToSnake(trimPrefix(m.Type.Name()))
+			} else {
+				tagName = strcase.ToSnake(trimPrefix(m.Name))
+			}
 		}
 
 		switch mt := convertSpec(m.Type).(type) {
@@ -89,7 +93,7 @@ func parseMessageFields(ds spec.DefineStruct) []messageField {
 		case spec.ArrayType:
 			mf := messageField{
 				FieldName:  tagName,
-				FieldType:  getArrayFieldType(mt.RawName),
+				FieldType:  trimPrefix(mt.RawName),
 				Comment:    getComment(m.Comment),
 				IsRepeated: true,
 			}
@@ -179,7 +183,7 @@ func getDoc(st spec.DefineStruct) string {
 	}
 }
 
-func getArrayFieldType(t string) string {
+func trimPrefix(t string) string {
 	ft := strings.TrimPrefix(t, "[]")
 	return strings.TrimSpace(strings.TrimPrefix(ft, "*"))
 }
