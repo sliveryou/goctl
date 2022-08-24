@@ -245,7 +245,7 @@ func parseSwagParams(ds spec.DefineStruct) []swagParam {
 	var sps []swagParam
 
 	for _, m := range ds.Members {
-		switch mt := m.Type.(type) {
+		switch mt := convertSpec(m.Type).(type) {
 		case spec.PrimitiveType:
 			tags, err := spec.Parse(m.Tag)
 			if err != nil {
@@ -308,6 +308,20 @@ func getDataType(dataType string) string {
 	}
 
 	return ""
+}
+
+func convertSpec(t spec.Type) spec.Type {
+	var tt spec.PointerType
+	var ok = true
+
+	for ok {
+		tt, ok = t.(spec.PointerType)
+		if ok {
+			t = tt.Type
+		}
+	}
+
+	return t
 }
 
 func getComment(comment string) string {
