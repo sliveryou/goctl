@@ -2,42 +2,20 @@ package javagen
 
 import (
 	"bytes"
+	_ "embed"
 	"fmt"
 	"strings"
 	"text/template"
 
+	"github.com/zeromicro/go-zero/core/stringx"
+
 	"github.com/sliveryou/goctl/api/spec"
 	apiutil "github.com/sliveryou/goctl/api/util"
 	"github.com/sliveryou/goctl/util"
-	"github.com/tal-tech/go-zero/core/stringx"
 )
 
-const packetTemplate = `package com.xhb.logic.http.packet.{{.packet}};
-
-import com.xhb.core.packet.HttpPacket;
-import com.xhb.core.network.HttpRequestClient;
-{{.imports}}
-
-{{.doc}}
-public class {{.packetName}} extends HttpPacket<{{.responseType}}> {
-	{{.paramsDeclaration}}
-
-	public {{.packetName}}({{.params}}{{if .HasRequestBody}}{{.requestType}} request{{end}}) {
-		{{if .HasRequestBody}}super(request);{{else}}super(EmptyRequest.instance);{{end}}
-		{{if .HasRequestBody}}this.request = request;{{end}}{{.paramsSetter}}
-    }
-
-	@Override
-    public HttpRequestClient.Method requestMethod() {
-        return HttpRequestClient.Method.{{.method}};
-    }
-
-	@Override
-    public String requestUri() {
-        return {{.uri}};
-    }
-}
-`
+//go:embed packet.tpl
+var packetTemplate string
 
 func genPacket(dir, packetName string, api *spec.ApiSpec) error {
 	for _, route := range api.Service.Routes() {
@@ -88,7 +66,7 @@ func createWith(dir string, api *spec.ApiSpec, route spec.Route, packetName stri
 
 	t := template.Must(template.New("packetTemplate").Parse(packetTemplate))
 	var tmplBytes bytes.Buffer
-	err = t.Execute(&tmplBytes, map[string]interface{}{
+	err = t.Execute(&tmplBytes, map[string]any{
 		"packetName":        packet,
 		"method":            strings.ToUpper(route.Method),
 		"uri":               processUri(route),

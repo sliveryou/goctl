@@ -1,12 +1,15 @@
 package gen
 
 import (
+	"sort"
 	"strings"
+
+	"github.com/zeromicro/go-zero/core/collection"
 
 	"github.com/sliveryou/goctl/model/sql/template"
 	"github.com/sliveryou/goctl/util"
+	"github.com/sliveryou/goctl/util/pathx"
 	"github.com/sliveryou/goctl/util/stringx"
-	"github.com/tal-tech/go-zero/core/collection"
 )
 
 func genDelete(table Table, withCache, postgreSql bool) (string, string, error) {
@@ -18,41 +21,47 @@ func genDelete(table Table, withCache, postgreSql bool) (string, string, error) 
 		keySet.AddStr(key.DataKeyExpression)
 		keyVariableSet.AddStr(key.KeyLeft)
 	}
+	keys := keySet.KeysStr()
+	sort.Strings(keys)
+	keyVars := keyVariableSet.KeysStr()
+	sort.Strings(keyVars)
 
 	camel := table.Name.ToCamel()
-	text, err := util.LoadTemplate(category, deleteTemplateFile, template.Delete)
+	text, err := pathx.LoadTemplate(category, deleteTemplateFile, template.Delete)
 	if err != nil {
 		return "", "", err
 	}
 
 	output, err := util.With("delete").
 		Parse(text).
-		Execute(map[string]interface{}{
+		Execute(map[string]any{
 			"upperStartCamelObject":     camel,
 			"withCache":                 withCache,
 			"containsIndexCache":        table.ContainsUniqueCacheKey,
-			"lowerStartCamelPrimaryKey": stringx.From(table.PrimaryKey.Name.ToCamel()).Untitle(),
+			"lowerStartCamelPrimaryKey": util.EscapeGolangKeyword(stringx.From(table.PrimaryKey.Name.ToCamel()).Untitle()),
 			"dataType":                  table.PrimaryKey.DataType,
-			"keys":                      strings.Join(keySet.KeysStr(), "\n"),
+			"keys":                      strings.Join(keys, "\n"),
 			"originalPrimaryKey":        wrapWithRawString(table.PrimaryKey.Name.Source(), postgreSql),
-			"keyValues":                 strings.Join(keyVariableSet.KeysStr(), ", "),
+			"keyValues":                 strings.Join(keyVars, ", "),
 			"postgreSql":                postgreSql,
+			"data":                      table,
 		})
 	if err != nil {
 		return "", "", err
 	}
 
 	// interface method
-	text, err = util.LoadTemplate(category, deleteMethodTemplateFile, template.DeleteMethod)
+	text, err = pathx.LoadTemplate(category, deleteMethodTemplateFile, template.DeleteMethod)
 	if err != nil {
 		return "", "", err
 	}
 
 	deleteMethodOut, err := util.With("deleteMethod").
 		Parse(text).
-		Execute(map[string]interface{}{
-			"lowerStartCamelPrimaryKey": stringx.From(table.PrimaryKey.Name.ToCamel()).Untitle(),
+		Execute(map[string]any{
+			"lowerStartCamelPrimaryKey": util.EscapeGolangKeyword(stringx.From(table.PrimaryKey.Name.ToCamel()).Untitle()),
 			"dataType":                  table.PrimaryKey.DataType,
+			"data":                      table,
 		})
 	if err != nil {
 		return "", "", err

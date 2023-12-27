@@ -6,14 +6,14 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/zeromicro/ddl-parser/parser"
+	"github.com/zeromicro/go-zero/core/collection"
+
 	"github.com/sliveryou/goctl/model/sql/converter"
 	"github.com/sliveryou/goctl/model/sql/model"
 	"github.com/sliveryou/goctl/model/sql/util"
-	su "github.com/sliveryou/goctl/util"
 	"github.com/sliveryou/goctl/util/console"
 	"github.com/sliveryou/goctl/util/stringx"
-	"github.com/tal-tech/go-zero/core/collection"
-	"github.com/zeromicro/ddl-parser/parser"
 )
 
 const timeImport = "time.Time"
@@ -26,6 +26,7 @@ type (
 		PrimaryKey  Primary
 		UniqueIndex map[string][]*Field
 		Fields      []*Field
+		ContainsPQ  bool
 	}
 
 	// Primary describes a primary key
@@ -42,6 +43,7 @@ type (
 		Comment         string
 		SeqInIndex      int
 		OrdinalPosition int
+		ContainsPQ      bool
 	}
 
 	// KeyType types alias of int
@@ -62,16 +64,14 @@ func parseNameOriginal(ts []*parser.Table) (nameOriginals [][]string) {
 }
 
 // Parse parses ddl into golang structure
-func Parse(filename, database string) ([]*Table, error) {
+func Parse(filename, database string, strict bool) ([]*Table, error) {
 	p := parser.NewParser()
-	ts, err := p.From(filename)
+	tables, err := p.From(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	nameOriginals := parseNameOriginal(ts)
-
-	tables := GetSafeTables(ts)
+	nameOriginals := parseNameOriginal(tables)
 	indexNameGen := func(column ...string) string {
 		return strings.Join(column, "_")
 	}
@@ -79,14 +79,13 @@ func Parse(filename, database string) ([]*Table, error) {
 	prefix := filepath.Base(filename)
 	var list []*Table
 	for indexTable, e := range tables {
-		columns := e.Columns
-
 		var (
+			primaryColumn    string
 			primaryColumnSet = collection.NewSet()
-
-			primaryColumn string
-			uniqueKeyMap  = make(map[string][]string)
-			normalKeyMap  = make(map[string][]string)
+			uniqueKeyMap     = make(map[string][]string)
+			// Unused local variable
+			// normalKeyMap     = make(map[string][]string)
+			columns = e.Columns
 		)
 
 		for _, column := range columns {
@@ -129,7 +128,9 @@ func Parse(filename, database string) ([]*Table, error) {
 			return nil, fmt.Errorf("%s: unexpected join primary key", prefix)
 		}
 
-		primaryKey, fieldM, err := convertColumns(columns, primaryColumn)
+		delete(uniqueKeyMap, indexNameGen(primaryColumn, "idx"))
+		delete(uniqueKeyMap, indexNameGen(primaryColumn, "unique"))
+		primaryKey, fieldM, err := convertColumns(columns, primaryColumn, strict)
 		if err != nil {
 			return nil, err
 		}
@@ -144,20 +145,15 @@ func Parse(filename, database string) ([]*Table, error) {
 			}
 		}
 
-		var (
-			uniqueIndex = make(map[string][]*Field)
-			normalIndex = make(map[string][]*Field)
-		)
+		uniqueIndex := make(map[string][]*Field)
 
 		for indexName, each := range uniqueKeyMap {
 			for _, columnName := range each {
+				// Prevent a crash if there is a unique key constraint with a nil field.
+				if fieldM[columnName] == nil {
+					return nil, fmt.Errorf("table %s: unique key with error column name[%s]", e.Name, columnName)
+				}
 				uniqueIndex[indexName] = append(uniqueIndex[indexName], fieldM[columnName])
-			}
-		}
-
-		for indexName, each := range normalKeyMap {
-			for _, columnName := range each {
-				normalIndex[indexName] = append(normalIndex[indexName], fieldM[columnName])
 			}
 		}
 
@@ -195,7 +191,7 @@ func checkDuplicateUniqueIndex(uniqueIndex map[string][]*Field, tableName string
 	}
 }
 
-func convertColumns(columns []*parser.Column, primaryColumn string) (Primary, map[string]*Field, error) {
+func convertColumns(columns []*parser.Column, primaryColumn string, strict bool) (Primary, map[string]*Field, error) {
 	var (
 		primaryKey Primary
 		fieldM     = make(map[string]*Field)
@@ -224,7 +220,7 @@ func convertColumns(columns []*parser.Column, primaryColumn string) (Primary, ma
 			}
 		}
 
-		dataType, err := converter.ConvertDataType(column.DataType.Type(), isDefaultNull)
+		dataType, err := converter.ConvertDataType(column.DataType.Type(), isDefaultNull, column.DataType.Unsigned(), strict)
 		if err != nil {
 			return Primary{}, nil, err
 		}
@@ -269,14 +265,16 @@ func (t *Table) ContainsTime() bool {
 }
 
 // ConvertDataType converts mysql data type into golang data type
-func ConvertDataType(table *model.Table) (*Table, error) {
+func ConvertDataType(table *model.Table, strict bool) (*Table, error) {
 	isPrimaryDefaultNull := table.PrimaryKey.ColumnDefault == nil && table.PrimaryKey.IsNullAble == "YES"
-	primaryDataType, err := converter.ConvertStringDataType(table.PrimaryKey.DataType, isPrimaryDefaultNull)
+	isPrimaryUnsigned := strings.Contains(table.PrimaryKey.DbColumn.ColumnType, "unsigned")
+	primaryDataType, containsPQ, err := converter.ConvertStringDataType(table.PrimaryKey.DataType, isPrimaryDefaultNull, isPrimaryUnsigned, strict)
 	if err != nil {
 		return nil, err
 	}
 
 	var reply Table
+	reply.ContainsPQ = containsPQ
 	reply.UniqueIndex = map[string][]*Field{}
 	reply.Name = stringx.From(table.Table)
 	reply.Db = stringx.From(table.Db)
@@ -296,12 +294,15 @@ func ConvertDataType(table *model.Table) (*Table, error) {
 		AutoIncrement: strings.Contains(table.PrimaryKey.Extra, "auto_increment"),
 	}
 
-	fieldM, err := getTableFields(table)
+	fieldM, err := getTableFields(table, strict)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, each := range fieldM {
+		if each.ContainsPQ {
+			reply.ContainsPQ = true
+		}
 		reply.Fields = append(reply.Fields, each)
 	}
 	sort.Slice(reply.Fields, func(i, j int) bool {
@@ -321,7 +322,7 @@ func ConvertDataType(table *model.Table) (*Table, error) {
 		if len(each) == 1 {
 			one := each[0]
 			if one.Name == table.PrimaryKey.Name {
-				log.Warning("[ConvertDataType]: table q%, duplicate unique index with primary key:  %q", table.Table, one.Name)
+				log.Warning("[ConvertDataType]: table %q, duplicate unique index with primary key:  %q", table.Table, one.Name)
 				continue
 			}
 		}
@@ -346,11 +347,12 @@ func ConvertDataType(table *model.Table) (*Table, error) {
 	return &reply, nil
 }
 
-func getTableFields(table *model.Table) (map[string]*Field, error) {
+func getTableFields(table *model.Table, strict bool) (map[string]*Field, error) {
 	fieldM := make(map[string]*Field)
 	for _, each := range table.Columns {
 		isDefaultNull := each.ColumnDefault == nil && each.IsNullAble == "YES"
-		dt, err := converter.ConvertStringDataType(each.DataType, isDefaultNull)
+		isPrimaryUnsigned := strings.Contains(each.ColumnType, "unsigned")
+		dt, containsPQ, err := converter.ConvertStringDataType(each.DataType, isDefaultNull, isPrimaryUnsigned, strict)
 		if err != nil {
 			return nil, err
 		}
@@ -360,45 +362,15 @@ func getTableFields(table *model.Table) (map[string]*Field, error) {
 		}
 
 		field := &Field{
+			NameOriginal:    each.Name,
 			Name:            stringx.From(each.Name),
 			DataType:        dt,
 			Comment:         each.Comment,
 			SeqInIndex:      columnSeqInIndex,
 			OrdinalPosition: each.OrdinalPosition,
+			ContainsPQ:      containsPQ,
 		}
 		fieldM[each.Name] = field
 	}
 	return fieldM, nil
-}
-
-// GetSafeTables escapes the golang keywords from sql tables.
-func GetSafeTables(tables []*parser.Table) []*parser.Table {
-	var list []*parser.Table
-	for _, t := range tables {
-		table := GetSafeTable(t)
-		list = append(list, table)
-	}
-
-	return list
-}
-
-// GetSafeTable escapes the golang keywords from sql table.
-func GetSafeTable(table *parser.Table) *parser.Table {
-	table.Name = su.EscapeGolangKeyword(table.Name)
-	for _, c := range table.Columns {
-		c.Name = su.EscapeGolangKeyword(c.Name)
-	}
-
-	for _, e := range table.Constraints {
-		var uniqueKeys, primaryKeys []string
-		for _, u := range e.ColumnUniqueKey {
-			uniqueKeys = append(uniqueKeys, su.EscapeGolangKeyword(u))
-		}
-		for _, p := range e.ColumnPrimaryKey {
-			primaryKeys = append(primaryKeys, su.EscapeGolangKeyword(p))
-		}
-		e.ColumnUniqueKey = uniqueKeys
-		e.ColumnPrimaryKey = primaryKeys
-	}
-	return table
 }

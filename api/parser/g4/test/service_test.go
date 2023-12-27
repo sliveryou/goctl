@@ -3,13 +3,14 @@ package test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/sliveryou/goctl/api/parser/g4/ast"
 	"github.com/sliveryou/goctl/api/parser/g4/gen/api"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestBody(t *testing.T) {
-	fn := func(p *api.ApiParserParser, v *ast.ApiVisitor) interface{} {
+	fn := func(p *api.ApiParserParser, v *ast.ApiVisitor) any {
 		return p.Body().Accept(v)
 	}
 	t.Run("normal", func(t *testing.T) {
@@ -33,7 +34,7 @@ func TestBody(t *testing.T) {
 }
 
 func TestRoute(t *testing.T) {
-	fn := func(p *api.ApiParserParser, v *ast.ApiVisitor) interface{} {
+	fn := func(p *api.ApiParserParser, v *ast.ApiVisitor) any {
 		return p.Route().Accept(v)
 	}
 	t.Run("normal", func(t *testing.T) {
@@ -125,6 +126,14 @@ func TestRoute(t *testing.T) {
 			},
 		}))
 
+		v, err = parser.Accept(fn, `post /1/2a/3b/4`)
+		assert.Nil(t, err)
+		route = v.(*ast.Route)
+		assert.True(t, route.Equal(&ast.Route{
+			Method: ast.NewTextExpr("post"),
+			Path:   ast.NewTextExpr("/1/2a/3b/4"),
+		}))
+
 		v, err = parser.Accept(fn, `post /foo/foo-bar/:bar`)
 		assert.Nil(t, err)
 		route = v.(*ast.Route)
@@ -188,7 +197,7 @@ func TestRoute(t *testing.T) {
 }
 
 func TestAtHandler(t *testing.T) {
-	fn := func(p *api.ApiParserParser, v *ast.ApiVisitor) interface{} {
+	fn := func(p *api.ApiParserParser, v *ast.ApiVisitor) any {
 		return p.AtHandler().Accept(v)
 	}
 	t.Run("normal", func(t *testing.T) {
@@ -228,7 +237,7 @@ func TestAtHandler(t *testing.T) {
 }
 
 func TestAtDoc(t *testing.T) {
-	fn := func(p *api.ApiParserParser, v *ast.ApiVisitor) interface{} {
+	fn := func(p *api.ApiParserParser, v *ast.ApiVisitor) any {
 		return p.AtDoc().Accept(v)
 	}
 	t.Run("normal", func(t *testing.T) {
@@ -300,7 +309,7 @@ func TestAtDoc(t *testing.T) {
 }
 
 func TestServiceRoute(t *testing.T) {
-	fn := func(p *api.ApiParserParser, v *ast.ApiVisitor) interface{} {
+	fn := func(p *api.ApiParserParser, v *ast.ApiVisitor) any {
 		return p.ServiceRoute().Accept(v)
 	}
 	t.Run("normal", func(t *testing.T) {
@@ -362,7 +371,7 @@ func TestServiceRoute(t *testing.T) {
 }
 
 func TestServiceApi(t *testing.T) {
-	fn := func(p *api.ApiParserParser, v *ast.ApiVisitor) interface{} {
+	fn := func(p *api.ApiParserParser, v *ast.ApiVisitor) any {
 		return p.ServiceApi().Accept(v)
 	}
 	t.Run("normal", func(t *testing.T) {
@@ -444,7 +453,7 @@ func TestServiceApi(t *testing.T) {
 }
 
 func TestAtServer(t *testing.T) {
-	fn := func(p *api.ApiParserParser, v *ast.ApiVisitor) interface{} {
+	fn := func(p *api.ApiParserParser, v *ast.ApiVisitor) any {
 		return p.AtServer().Accept(v)
 	}
 	t.Run("normal", func(t *testing.T) {
@@ -512,7 +521,7 @@ func TestAtServer(t *testing.T) {
 }
 
 func TestServiceSpec(t *testing.T) {
-	fn := func(p *api.ApiParserParser, v *ast.ApiVisitor) interface{} {
+	fn := func(p *api.ApiParserParser, v *ast.ApiVisitor) any {
 		return p.ServiceSpec().Accept(v)
 	}
 	t.Run("normal", func(t *testing.T) {

@@ -4,7 +4,12 @@ import (
 	"bytes"
 	"strings"
 	"unicode"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
+
+var WhiteSpace = []rune{'\n', '\t', '\f', '\v', ' '}
 
 // String  provides for converting the source text into other spell case,like lower,snake,camel
 type String struct {
@@ -47,12 +52,12 @@ func (s String) Source() string {
 	return s.source
 }
 
-// Title calls the strings.Title
+// Title calls the cases.Title
 func (s String) Title() string {
 	if s.IsEmptyOrSpace() {
 		return s.source
 	}
-	return strings.Title(s.source)
+	return cases.Title(language.English, cases.NoLower).String(s.source)
 }
 
 // ToCamel converts the input text into camel case
@@ -113,4 +118,37 @@ func (s String) splitBy(fn func(r rune) bool, remove bool) []string {
 		list = append(list, buffer.String())
 	}
 	return list
+}
+
+func ContainsAny(s string, runes ...rune) bool {
+	if len(runes) == 0 {
+		return true
+	}
+	tmp := make(map[rune]struct{}, len(runes))
+	for _, r := range runes {
+		tmp[r] = struct{}{}
+	}
+
+	for _, r := range s {
+		if _, ok := tmp[r]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+func ContainsWhiteSpace(s string) bool {
+	return ContainsAny(s, WhiteSpace...)
+}
+
+func IsWhiteSpace(text string) bool {
+	if len(text) == 0 {
+		return true
+	}
+	for _, r := range text {
+		if !unicode.IsSpace(r) {
+			return false
+		}
+	}
+	return true
 }

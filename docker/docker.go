@@ -4,49 +4,57 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"text/template"
-	"time"
 
-	"github.com/logrusorgru/aurora"
+	"github.com/gookit/color"
+	"github.com/spf13/cobra"
+
 	"github.com/sliveryou/goctl/util"
-	"github.com/urfave/cli"
+	"github.com/sliveryou/goctl/util/env"
+	"github.com/sliveryou/goctl/util/pathx"
 )
 
 const (
 	dockerfileName = "Dockerfile"
 	etcDir         = "etc"
 	yamlEtx        = ".yaml"
-	cstOffset      = 60 * 60 * 8 // 8 hours offset for Chinese Standard Time
 )
 
 // Docker describes a dockerfile
 type Docker struct {
-	Chinese   bool
-	GoRelPath string
-	GoFile    string
-	ExeFile   string
-	HasPort   bool
-	Port      int
-	Argument  string
-	Version   string
+	Chinese     bool
+	GoMainFrom  string
+	GoRelPath   string
+	GoFile      string
+	ExeFile     string
+	BaseImage   string
+	HasPort     bool
+	Port        int
+	Argument    string
+	Version     string
+	HasTimezone bool
+	Timezone    string
 }
 
-// DockerCommand provides the entry for goctl docker
-func DockerCommand(c *cli.Context) (err error) {
+// dockerCommand provides the entry for goctl docker
+func dockerCommand(_ *cobra.Command, _ []string) (err error) {
 	defer func() {
 		if err == nil {
-			fmt.Println(aurora.Green("Done."))
+			fmt.Println(color.Green.Render("Done."))
 		}
 	}()
 
-	goFile := c.String("go")
-	home := c.String("home")
-	version := c.String("version")
-	remote := c.String("remote")
+	goFile := varStringGo
+	home := varStringHome
+	version := varStringVersion
+	remote := varStringRemote
+	branch := varStringBranch
+	timezone := varStringTZ
 	if len(remote) > 0 {
-		repo, _ := util.CloneIntoGitHome(remote)
+		repo, _ := util.CloneIntoGitHome(remote, branch)
 		if len(repo) > 0 {
 			home = repo
 		}
@@ -57,20 +65,17 @@ func DockerCommand(c *cli.Context) (err error) {
 	}
 
 	if len(home) > 0 {
-		util.RegisterGoctlHome(home)
+		pathx.RegisterGoctlHome(home)
 	}
 
-	if len(goFile) == 0 {
-		return errors.New("-go can't be empty")
-	}
-
-	if !util.FileExists(goFile) {
+	if len(goFile) > 0 && !pathx.FileExists(goFile) {
 		return fmt.Errorf("file %q not found", goFile)
 	}
 
-	port := c.Int("port")
+	base := varStringBase
+	port := varIntPort
 	if _, err := os.Stat(etcDir); os.IsNotExist(err) {
-		return generateDockerfile(goFile, port, version)
+		return generateDockerfile(goFile, base, port, version, timezone)
 	}
 
 	cfg, err := findConfig(goFile, etcDir)
@@ -78,11 +83,11 @@ func DockerCommand(c *cli.Context) (err error) {
 		return err
 	}
 
-	if err := generateDockerfile(goFile, port, version, "-f", "etc/"+cfg); err != nil {
+	if err := generateDockerfile(goFile, base, port, version, timezone, "-f", "etc/"+cfg); err != nil {
 		return err
 	}
 
-	projDir, ok := util.FindProjectPath(goFile)
+	projDir, ok := pathx.FindProjectPath(goFile)
 	if ok {
 		fmt.Printf("Hint: run \"docker build ...\" command in dir:\n    %s\n", projDir)
 	}
@@ -119,23 +124,27 @@ func findConfig(file, dir string) (string, error) {
 	return files[0], nil
 }
 
-func generateDockerfile(goFile string, port int, version string, args ...string) error {
-	projPath, err := getFilePath(filepath.Dir(goFile))
-	if err != nil {
-		return err
+func generateDockerfile(goFile, base string, port int, version, timezone string, args ...string) error {
+	var projPath string
+	var err error
+	if len(goFile) > 0 {
+		projPath, err = getFilePath(filepath.Dir(goFile))
+		if err != nil {
+			return err
+		}
 	}
 
 	if len(projPath) == 0 {
 		projPath = "."
 	}
 
-	out, err := util.CreateIfNotExist(dockerfileName)
+	out, err := pathx.CreateIfNotExist(dockerfileName)
 	if err != nil {
 		return err
 	}
 	defer out.Close()
 
-	text, err := util.LoadTemplate(category, dockerTemplateFile, dockerTemplate)
+	text, err := pathx.LoadTemplate(category, dockerTemplateFile, dockerTemplate)
 	if err != nil {
 		return err
 	}
@@ -145,17 +154,34 @@ func generateDockerfile(goFile string, port int, version string, args ...string)
 		builder.WriteString(`, "` + arg + `"`)
 	}
 
-	_, offset := time.Now().Zone()
+	var exeName string
+	if len(varExeName) > 0 {
+		exeName = varExeName
+	} else if len(goFile) > 0 {
+		exeName = pathx.FileNameWithoutExt(filepath.Base(goFile))
+	} else {
+		absPath, err := filepath.Abs(projPath)
+		if err != nil {
+			return err
+		}
+
+		exeName = filepath.Base(absPath)
+	}
+
 	t := template.Must(template.New("dockerfile").Parse(text))
 	return t.Execute(out, Docker{
-		Chinese:   offset == cstOffset,
-		GoRelPath: projPath,
-		GoFile:    goFile,
-		ExeFile:   util.FileNameWithoutExt(filepath.Base(goFile)),
-		HasPort:   port > 0,
-		Port:      port,
-		Argument:  builder.String(),
-		Version:   version,
+		Chinese:     env.InChina(),
+		GoMainFrom:  path.Join(projPath, goFile),
+		GoRelPath:   projPath,
+		GoFile:      goFile,
+		ExeFile:     exeName,
+		BaseImage:   base,
+		HasPort:     port > 0,
+		Port:        port,
+		Argument:    builder.String(),
+		Version:     version,
+		HasTimezone: len(timezone) > 0,
+		Timezone:    timezone,
 	})
 }
 
@@ -165,9 +191,9 @@ func getFilePath(file string) (string, error) {
 		return "", err
 	}
 
-	projPath, ok := util.FindGoModPath(filepath.Join(wd, file))
+	projPath, ok := pathx.FindGoModPath(filepath.Join(wd, file))
 	if !ok {
-		projPath, err = util.PathFromGoSrc()
+		projPath, err = pathx.PathFromGoSrc()
 		if err != nil {
 			return "", errors.New("no go.mod found, or not in GOPATH")
 		}

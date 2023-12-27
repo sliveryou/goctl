@@ -5,17 +5,25 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/logrusorgru/aurora"
+	"github.com/gookit/color"
+	"github.com/spf13/cobra"
+	"github.com/zeromicro/go-zero/core/logx"
+
 	"github.com/sliveryou/goctl/api/parser"
-	"github.com/sliveryou/goctl/util"
-	"github.com/tal-tech/go-zero/core/logx"
-	"github.com/urfave/cli"
+	"github.com/sliveryou/goctl/util/pathx"
 )
 
-// JavaCommand the generate java code command entrance
-func JavaCommand(c *cli.Context) error {
-	apiFile := c.String("api")
-	dir := c.String("dir")
+var (
+	// VarStringDir describes a directory.
+	VarStringDir string
+	// VarStringAPI describes an API.
+	VarStringAPI string
+)
+
+// JavaCommand generates java code command entrance.
+func JavaCommand(_ *cobra.Command, _ []string) error {
+	apiFile := VarStringAPI
+	dir := VarStringDir
 	if len(apiFile) == 0 {
 		return errors.New("missing -api")
 	}
@@ -28,12 +36,16 @@ func JavaCommand(c *cli.Context) error {
 		return err
 	}
 
+	if err := api.Validate(); err != nil {
+		return err
+	}
+
 	api.Service = api.Service.JoinPrefix()
 	packetName := strings.TrimSuffix(api.Service.Name, "-api")
-	logx.Must(util.MkdirIfNotExist(dir))
+	logx.Must(pathx.MkdirIfNotExist(dir))
 	logx.Must(genPacket(dir, packetName, api))
 	logx.Must(genComponents(dir, packetName, api))
 
-	fmt.Println(aurora.Green("Done."))
+	fmt.Println(color.Green.Render("Done."))
 	return nil
 }

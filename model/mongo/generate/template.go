@@ -4,19 +4,22 @@ import (
 	"fmt"
 
 	"github.com/sliveryou/goctl/model/mongo/template"
-	"github.com/sliveryou/goctl/util"
-	"github.com/urfave/cli"
+	"github.com/sliveryou/goctl/util/pathx"
 )
 
 const (
-	category          = "mongo"
-	modelTemplateFile = "model.tpl"
-	errTemplateFile   = "err.tpl"
+	category                = "mongo"
+	modelTemplateFile       = "model.tpl"
+	modelCustomTemplateFile = "model_custom.tpl"
+	modelTypesTemplateFile  = "model_types.tpl"
+	errTemplateFile         = "err.tpl"
 )
 
 var templates = map[string]string{
-	modelTemplateFile: template.Text,
-	errTemplateFile:   template.Error,
+	modelTemplateFile:       template.ModelText,
+	modelCustomTemplateFile: template.ModelCustomText,
+	modelTypesTemplateFile:  template.ModelTypesText,
+	errTemplateFile:         template.Error,
 }
 
 // Category returns the mongo category.
@@ -26,12 +29,12 @@ func Category() string {
 
 // Clean cleans the mongo templates.
 func Clean() error {
-	return util.Clean(category)
+	return pathx.Clean(category)
 }
 
 // Templates initializes the mongo templates.
-func Templates(_ *cli.Context) error {
-	return util.InitTemplates(category, templates)
+func Templates() error {
+	return pathx.InitTemplates(category, templates)
 }
 
 // RevertTemplate reverts the given template.
@@ -41,7 +44,7 @@ func RevertTemplate(name string) error {
 		return fmt.Errorf("%s: no such file name", name)
 	}
 
-	return util.CreateTemplate(category, name, content)
+	return pathx.CreateTemplate(category, name, content)
 }
 
 // Update cleans and updates the templates.
@@ -51,5 +54,5 @@ func Update() error {
 		return err
 	}
 
-	return util.InitTemplates(category, templates)
+	return pathx.InitTemplates(category, templates)
 }

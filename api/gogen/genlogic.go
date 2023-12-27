@@ -1,6 +1,7 @@
 package gogen
 
 import (
+	_ "embed"
 	"fmt"
 	"path"
 	"strconv"
@@ -9,37 +10,13 @@ import (
 	"github.com/sliveryou/goctl/api/parser/g4/gen/api"
 	"github.com/sliveryou/goctl/api/spec"
 	"github.com/sliveryou/goctl/config"
-	ctlutil "github.com/sliveryou/goctl/util"
 	"github.com/sliveryou/goctl/util/format"
+	"github.com/sliveryou/goctl/util/pathx"
 	"github.com/sliveryou/goctl/vars"
 )
 
-const logicTemplate = `package {{.pkgName}}
-
-import (
-	{{.imports}}
-)
-
-type {{.logic}} struct {
-	logx.Logger
-	ctx    context.Context
-	svcCtx *svc.ServiceContext
-}
-
-func New{{.logic}}(ctx context.Context, svcCtx *svc.ServiceContext) {{.logic}} {
-	return {{.logic}}{
-		Logger: logx.WithContext(ctx),
-		ctx:    ctx,
-		svcCtx: svcCtx,
-	}
-}
-
-func (l *{{.logic}}) {{.function}}({{.request}}) {{.responseType}} {
-	// todo: add your logic here and delete this line
-
-	{{.returnString}}
-}
-`
+//go:embed logic.tpl
+var logicTemplate string
 
 func genLogic(dir, rootPkg string, cfg *config.Config, api *spec.ApiSpec) error {
 	for _, g := range api.Service.Groups {
@@ -73,7 +50,7 @@ func genLogicByRoute(dir, rootPkg string, cfg *config.Config, group spec.Group, 
 		returnString = "return nil"
 	}
 	if len(route.RequestTypeName()) > 0 {
-		requestString = "req " + requestGoTypeName(route, typesPacket)
+		requestString = "req *" + requestGoTypeName(route, typesPacket)
 	}
 	summary := "业务逻辑"
 	if route.AtDoc.Properties != nil {
@@ -118,9 +95,9 @@ func getLogicFolderPath(group spec.Group, route spec.Route) string {
 func genLogicImports(route spec.Route, parentPkg string) string {
 	var imports []string
 	imports = append(imports, `"context"`+"\n")
-	imports = append(imports, fmt.Sprintf("\"%s\"", ctlutil.JoinPackages(parentPkg, contextDir)))
+	imports = append(imports, fmt.Sprintf("\"%s\"", pathx.JoinPackages(parentPkg, contextDir)))
 	if shallImportTypesPackage(route) {
-		imports = append(imports, fmt.Sprintf("\"%s\"\n", ctlutil.JoinPackages(parentPkg, typesDir)))
+		imports = append(imports, fmt.Sprintf("\"%s\"\n", pathx.JoinPackages(parentPkg, typesDir)))
 	}
 	imports = append(imports, fmt.Sprintf("\"%s/core/logx\"", vars.ProjectOpenSourceURL))
 	return strings.Join(imports, "\n\t")

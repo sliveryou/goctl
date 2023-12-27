@@ -6,13 +6,14 @@ import (
 	"github.com/sliveryou/goctl/model/sql/parser"
 	"github.com/sliveryou/goctl/model/sql/template"
 	"github.com/sliveryou/goctl/util"
+	"github.com/sliveryou/goctl/util/pathx"
 )
 
-func genFields(fields []*parser.Field) (string, error) {
+func genFields(table Table, fields []*parser.Field) (string, error) {
 	var list []string
 
 	for _, field := range fields {
-		result, err := genField(field)
+		result, err := genField(table, field)
 		if err != nil {
 			return "", err
 		}
@@ -23,25 +24,26 @@ func genFields(fields []*parser.Field) (string, error) {
 	return strings.Join(list, "\n"), nil
 }
 
-func genField(field *parser.Field) (string, error) {
-	tag, err := genTag(field.NameOriginal)
+func genField(table Table, field *parser.Field) (string, error) {
+	tag, err := genTag(table, field.NameOriginal)
 	if err != nil {
 		return "", err
 	}
 
-	text, err := util.LoadTemplate(category, fieldTemplateFile, template.Field)
+	text, err := pathx.LoadTemplate(category, fieldTemplateFile, template.Field)
 	if err != nil {
 		return "", err
 	}
 
 	output, err := util.With("types").
 		Parse(text).
-		Execute(map[string]interface{}{
-			"name":       field.Name.ToCamel(),
+		Execute(map[string]any{
+			"name":       util.SafeString(field.Name.ToCamel()),
 			"type":       field.DataType,
 			"tag":        tag,
 			"hasComment": field.Comment != "",
 			"comment":    field.Comment,
+			"data":       table,
 		})
 	if err != nil {
 		return "", err

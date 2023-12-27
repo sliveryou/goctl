@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"strings"
 
-	"github.com/tal-tech/go-zero/core/stores/sqlx"
+	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
 var p2m = map[string]string{
@@ -72,7 +72,8 @@ from (
                 t.typname     AS type,
                 a.atttypmod   AS lengthvar,
                 a.attnotnull  AS not_null,
-                b.description AS comment
+                b.description AS comment,
+                (c.relnamespace::regnamespace)::varchar AS schema_name
          FROM pg_class c,
               pg_attribute a
                   LEFT OUTER JOIN pg_description b ON a.attrelid = b.objoid AND a.attnum = b.objsubid,
@@ -81,9 +82,11 @@ from (
            and a.attnum > 0
            and a.attrelid = c.oid
            and a.atttypid = t.oid
+ 		 GROUP BY a.attnum, c.relname, a.attname, t.typname, a.atttypmod, a.attnotnull, b.description, c.relnamespace::regnamespace
          ORDER BY a.attnum) AS t
-         left join information_schema.columns AS c on t.relname = c.table_name 
-		and t.field = c.column_name and c.table_schema = $2`
+         left join information_schema.columns AS c on t.relname = c.table_name and t.schema_name = c.table_schema
+		and t.field = c.column_name
+		where c.table_schema = $2`
 
 	var reply []*PostgreColumn
 	err := m.conn.QueryRowsPartial(&reply, querySql, table, schema)
@@ -108,9 +111,10 @@ func (m *PostgreSqlModel) getColumns(schema, table string, in []*PostgreColumn) 
 	if err != nil {
 		return nil, err
 	}
+
 	var list []*Column
 	for _, e := range in {
-		var dft interface{}
+		var dft any
 		if len(e.ColumnDefault.String) > 0 {
 			dft = e.ColumnDefault
 		}
@@ -120,9 +124,15 @@ func (m *PostgreSqlModel) getColumns(schema, table string, in []*PostgreColumn) 
 			isNullAble = "NO"
 		}
 
-		extra := "auto_increment"
-		if e.IdentityIncrement.Int32 != 1 {
-			extra = ""
+		var extra string
+		// when identity is true, the column is auto increment
+		if e.IdentityIncrement.Int32 == 1 {
+			extra = "auto_increment"
+		}
+
+		// when type is serial, it's auto_increment. and the default value is tablename_columnname_seq
+		if strings.Contains(e.ColumnDefault.String, table+"_"+e.Field.String+"_seq") {
+			extra = "auto_increment"
 		}
 
 		if len(index[e.Field.String]) > 0 {
@@ -172,6 +182,7 @@ func (m *PostgreSqlModel) getIndex(schema, table string) (map[string][]*DbIndex,
 	if err != nil {
 		return nil, err
 	}
+
 	index := make(map[string][]*DbIndex)
 	for _, e := range indexes {
 		if e.IsPrimary.Bool {
@@ -193,6 +204,7 @@ func (m *PostgreSqlModel) getIndex(schema, table string) (map[string][]*DbIndex,
 			SeqInIndex: int(e.IndexSort.Int32),
 		})
 	}
+
 	return index, nil
 }
 

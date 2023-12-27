@@ -1,24 +1,26 @@
 package test
 
 import (
-	"io/ioutil"
+	_ "embed"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/sliveryou/goctl/api/parser/g4/ast"
 	"github.com/sliveryou/goctl/api/parser/g4/gen/api"
-	"github.com/stretchr/testify/assert"
 )
+
+//go:embed apis/test.api
+var testApi string
 
 var parser = ast.NewParser(ast.WithParserPrefix("test.api"), ast.WithParserDebug())
 
 func TestApi(t *testing.T) {
-	fn := func(p *api.ApiParserParser, visitor *ast.ApiVisitor) interface{} {
+	fn := func(p *api.ApiParserParser, visitor *ast.ApiVisitor) any {
 		return p.Api().Accept(visitor)
 	}
-	content, err := ioutil.ReadFile("./apis/test.api")
-	assert.Nil(t, err)
 
-	v, err := parser.Accept(fn, string(content))
+	v, err := parser.Accept(fn, testApi)
 	assert.Nil(t, err)
 	api := v.(*ast.Api)
 	body := &ast.Body{
@@ -444,7 +446,7 @@ func TestApi(t *testing.T) {
 }
 
 func TestApiSyntax(t *testing.T) {
-	fn := func(p *api.ApiParserParser, visitor *ast.ApiVisitor) interface{} {
+	fn := func(p *api.ApiParserParser, visitor *ast.ApiVisitor) any {
 		return p.Api().Accept(visitor)
 	}
 	parser.Accept(fn, `

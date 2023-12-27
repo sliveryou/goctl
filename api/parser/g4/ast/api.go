@@ -8,7 +8,10 @@ import (
 	"github.com/sliveryou/goctl/api/parser/g4/gen/api"
 )
 
-const prefixKey = "prefix"
+const (
+	prefixKey = "prefix"
+	groupKey  = "group"
+)
 
 // Api describes syntax for api
 type Api struct {
@@ -26,7 +29,7 @@ type Api struct {
 }
 
 // VisitApi implements from api.BaseApiParserVisitor
-func (v *ApiVisitor) VisitApi(ctx *api.ApiContext) interface{} {
+func (v *ApiVisitor) VisitApi(ctx *api.ApiContext) any {
 	var final Api
 	final.importM = map[string]PlaceHolder{}
 	final.typeM = map[string]PlaceHolder{}
@@ -52,11 +55,15 @@ func (v *ApiVisitor) acceptService(root, final *Api) {
 		}
 		v.duplicateServerItemCheck(service)
 
-		var prefix string
+		var prefix, group string
 		if service.AtServer != nil {
 			p := service.AtServer.Kv.Get(prefixKey)
 			if p != nil {
 				prefix = p.Text()
+			}
+			g := service.AtServer.Kv.Get(groupKey)
+			if g != nil {
+				group = g.Text()
 			}
 		}
 		for _, route := range service.ServiceApi.ServiceRoute {
@@ -92,10 +99,14 @@ func (v *ApiVisitor) acceptService(root, final *Api) {
 				v.panic(handlerExpr, "mismatched handler")
 			}
 
-			if _, ok := final.handlerM[handlerExpr.Text()]; ok {
+			handlerKey := handlerExpr.Text()
+			if len(group) > 0 {
+				handlerKey = fmt.Sprintf("%s/%s", group, handlerExpr.Text())
+			}
+			if _, ok := final.handlerM[handlerKey]; ok {
 				v.panic(handlerExpr, fmt.Sprintf("duplicate handler '%s'", handlerExpr.Text()))
 			}
-			final.handlerM[handlerExpr.Text()] = Holder
+			final.handlerM[handlerKey] = Holder
 		}
 		final.Service = append(final.Service, service)
 	}
@@ -165,7 +176,7 @@ func (v *ApiVisitor) acceptSyntax(root, final *Api) {
 }
 
 // VisitSpec implements from api.BaseApiParserVisitor
-func (v *ApiVisitor) VisitSpec(ctx *api.SpecContext) interface{} {
+func (v *ApiVisitor) VisitSpec(ctx *api.SpecContext) any {
 	var root Api
 	if ctx.SyntaxLit() != nil {
 		root.Syntax = ctx.SyntaxLit().Accept(v).(*SyntaxExpr)
@@ -198,8 +209,8 @@ func (a *Api) Format() error {
 }
 
 // Equal compares whether the element literals in two Api are equal
-func (a *Api) Equal(v interface{}) bool {
-	if v == nil {
+func (a *Api) Equal(v any) bool {
+	if v == nil || a == nil {
 		return false
 	}
 

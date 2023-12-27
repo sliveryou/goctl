@@ -4,18 +4,19 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/sliveryou/goctl/util"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/sliveryou/goctl/util/pathx"
 )
 
 func TestProtoTmpl(t *testing.T) {
 	_ = Clean()
 	// exists dir
-	err := ProtoTmpl(util.MustTempDir())
+	err := ProtoTmpl(pathx.MustTempDir())
 	assert.Nil(t, err)
 
 	// not exist dir
-	dir := filepath.Join(util.MustTempDir(), "test")
+	dir := filepath.Join(pathx.MustTempDir(), "test")
 	err = ProtoTmpl(dir)
 	assert.Nil(t, err)
 }

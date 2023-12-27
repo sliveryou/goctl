@@ -12,7 +12,7 @@ import (
 
 const (
 	versionRegex     = `(?m)"v[1-9][0-9]*"`
-	importValueRegex = `(?m)"(/?[a-zA-Z0-9_#-])+\.api"`
+	importValueRegex = `(?m)"\/?(?:[^/]+\/)*[^/]+.api"`
 	tagRegex         = `(?m)\x60[a-z]+:".+"\x60`
 )
 
@@ -175,7 +175,7 @@ func isNormal(p *ApiParserParser) bool {
 	return len(list) > 1
 }
 
-// MatchTag returns a Boolean value, which returns true if it does matched, otherwise returns fase
+// MatchTag returns a Boolean value, which returns true if it does matched, otherwise returns false
 func MatchTag(v string) bool {
 	return matchRegex(v, tagRegex)
 }

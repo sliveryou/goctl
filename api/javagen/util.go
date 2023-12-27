@@ -8,12 +8,13 @@ import (
 
 	"github.com/sliveryou/goctl/api/spec"
 	"github.com/sliveryou/goctl/util"
+	"github.com/sliveryou/goctl/util/pathx"
 )
 
 func writeProperty(writer io.Writer, member spec.Member, indent int) error {
 	if len(member.Comment) > 0 {
 		writeIndent(writer, indent)
-		fmt.Fprint(writer, member.Comment+util.NL)
+		fmt.Fprint(writer, member.Comment+pathx.NL)
 	}
 	writeIndent(writer, indent)
 	ty, err := specTypeToJava(member.Type)

@@ -6,8 +6,9 @@ import (
 	"os/exec"
 	"runtime"
 
+	"github.com/spf13/cobra"
+
 	"github.com/sliveryou/goctl/internal/version"
-	"github.com/urfave/cli"
 )
 
 const (
@@ -29,7 +30,7 @@ var openCmd = map[string]string{
 	darwin:  darwinOpen,
 }
 
-func Action(_ *cli.Context) error {
+func runE(_ *cobra.Command, _ []string) error {
 	env := getEnv()
 	content := fmt.Sprintf(issueTemplate, version.BuildVersion, env.string())
 	content = url.QueryEscape(content)

@@ -1,14 +1,22 @@
 package ctx
 
 import (
+	"bufio"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/sliveryou/goctl/rpc/execx"
-	"github.com/sliveryou/goctl/util"
-	"github.com/tal-tech/go-zero/core/jsonx"
+	"github.com/sliveryou/goctl/util/pathx"
 )
+
+const goModuleWithoutGoFiles = "command-line-arguments"
+
+var errInvalidGoMod = errors.New("invalid go module")
 
 // Module contains the relative data of go module,
 // which is the result of the command go list
@@ -18,6 +26,13 @@ type Module struct {
 	Dir       string
 	GoMod     string
 	GoVersion string
+}
+
+func (m *Module) validate() error {
+	if m.Path == goModuleWithoutGoFiles || m.Dir == "" {
+		return errInvalidGoMod
+	}
+	return nil
 }
 
 // projectFromGoMod is used to find the go module and project file path
@@ -31,25 +46,23 @@ func projectFromGoMod(workDir string) (*ProjectContext, error) {
 		return nil, err
 	}
 
-	workDir, err := util.ReadLink(workDir)
+	workDir, err := pathx.ReadLink(workDir)
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := execx.Run("go list -json -m", workDir)
+	m, err := getRealModule(workDir, execx.Run)
 	if err != nil {
+		return nil, err
+	}
+	if err := m.validate(); err != nil {
 		return nil, err
 	}
 
-	var m Module
-	err = jsonx.Unmarshal([]byte(data), &m)
-	if err != nil {
-		return nil, err
-	}
 	var ret ProjectContext
 	ret.WorkDir = workDir
 	ret.Name = filepath.Base(m.Dir)
-	dir, err := util.ReadLink(m.Dir)
+	dir, err := pathx.ReadLink(m.Dir)
 	if err != nil {
 		return nil, err
 	}
@@ -57,4 +70,53 @@ func projectFromGoMod(workDir string) (*ProjectContext, error) {
 	ret.Dir = dir
 	ret.Path = m.Path
 	return &ret, nil
+}
+
+func getRealModule(workDir string, execRun execx.RunFunc) (*Module, error) {
+	data, err := execRun("go list -json -m", workDir)
+	if err != nil {
+		return nil, err
+	}
+
+	modules, err := decodePackages(strings.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, m := range modules {
+		realDir, err := pathx.ReadLink(m.Dir)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read go.mod, dir: %s, error: %w", m.Dir, err)
+		}
+
+		if strings.HasPrefix(workDir, realDir) {
+			return &m, nil
+		}
+	}
+
+	return nil, errors.New("no matched module")
+}
+
+func decodePackages(reader io.Reader) ([]Module, error) {
+	br := bufio.NewReader(reader)
+	if _, err := br.ReadSlice('{'); err != nil {
+		return nil, err
+	}
+
+	if err := br.UnreadByte(); err != nil {
+		return nil, err
+	}
+
+	var modules []Module
+	decoder := json.NewDecoder(br)
+	for decoder.More() {
+		var m Module
+		if err := decoder.Decode(&m); err != nil {
+			return nil, fmt.Errorf("invalid module: %v", err)
+		}
+
+		modules = append(modules, m)
+	}
+
+	return modules, nil
 }

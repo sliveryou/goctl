@@ -3,44 +3,47 @@ package gen
 import (
 	"github.com/sliveryou/goctl/model/sql/template"
 	"github.com/sliveryou/goctl/util"
+	"github.com/sliveryou/goctl/util/pathx"
 	"github.com/sliveryou/goctl/util/stringx"
 )
 
 func genFindOne(table Table, withCache, postgreSql bool) (string, string, error) {
 	camel := table.Name.ToCamel()
-	text, err := util.LoadTemplate(category, findOneTemplateFile, template.FindOne)
+	text, err := pathx.LoadTemplate(category, findOneTemplateFile, template.FindOne)
 	if err != nil {
 		return "", "", err
 	}
 
 	output, err := util.With("findOne").
 		Parse(text).
-		Execute(map[string]interface{}{
+		Execute(map[string]any{
 			"withCache":                 withCache,
 			"upperStartCamelObject":     camel,
 			"lowerStartCamelObject":     stringx.From(camel).Untitle(),
 			"originalPrimaryKey":        wrapWithRawString(table.PrimaryKey.Name.Source(), postgreSql),
-			"lowerStartCamelPrimaryKey": stringx.From(table.PrimaryKey.Name.ToCamel()).Untitle(),
+			"lowerStartCamelPrimaryKey": util.EscapeGolangKeyword(stringx.From(table.PrimaryKey.Name.ToCamel()).Untitle()),
 			"dataType":                  table.PrimaryKey.DataType,
 			"cacheKey":                  table.PrimaryCacheKey.KeyExpression,
 			"cacheKeyVariable":          table.PrimaryCacheKey.KeyLeft,
 			"postgreSql":                postgreSql,
+			"data":                      table,
 		})
 	if err != nil {
 		return "", "", err
 	}
 
-	text, err = util.LoadTemplate(category, findOneMethodTemplateFile, template.FindOneMethod)
+	text, err = pathx.LoadTemplate(category, findOneMethodTemplateFile, template.FindOneMethod)
 	if err != nil {
 		return "", "", err
 	}
 
 	findOneMethod, err := util.With("findOneMethod").
 		Parse(text).
-		Execute(map[string]interface{}{
+		Execute(map[string]any{
 			"upperStartCamelObject":     camel,
-			"lowerStartCamelPrimaryKey": stringx.From(table.PrimaryKey.Name.ToCamel()).Untitle(),
+			"lowerStartCamelPrimaryKey": util.EscapeGolangKeyword(stringx.From(table.PrimaryKey.Name.ToCamel()).Untitle()),
 			"dataType":                  table.PrimaryKey.DataType,
+			"data":                      table,
 		})
 	if err != nil {
 		return "", "", err

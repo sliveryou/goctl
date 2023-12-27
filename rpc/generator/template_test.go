@@ -1,31 +1,31 @@
 package generator
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/sliveryou/goctl/util"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/sliveryou/goctl/util/pathx"
 )
 
 func TestGenTemplates(t *testing.T) {
 	_ = Clean()
-	err := GenTemplates(nil)
+	err := GenTemplates()
 	assert.Nil(t, err)
 }
 
 func TestRevertTemplate(t *testing.T) {
 	_ = Clean()
-	err := GenTemplates(nil)
+	err := GenTemplates()
 	assert.Nil(t, err)
-	fp, err := util.GetTemplateDir(category)
+	fp, err := pathx.GetTemplateDir(category)
 	if err != nil {
 		return
 	}
 	mainTpl := filepath.Join(fp, mainTemplateFile)
-	data, err := ioutil.ReadFile(mainTpl)
+	data, err := os.ReadFile(mainTpl)
 	if err != nil {
 		return
 	}
@@ -36,12 +36,12 @@ func TestRevertTemplate(t *testing.T) {
 		assert.Equal(t, "test: no such file name", err.Error())
 	}
 
-	err = ioutil.WriteFile(mainTpl, []byte("modify"), os.ModePerm)
+	err = os.WriteFile(mainTpl, []byte("modify"), os.ModePerm)
 	if err != nil {
 		return
 	}
 
-	data, err = ioutil.ReadFile(mainTpl)
+	data, err = os.ReadFile(mainTpl)
 	if err != nil {
 		return
 	}
@@ -50,7 +50,7 @@ func TestRevertTemplate(t *testing.T) {
 	err = RevertTemplate(mainTemplateFile)
 	assert.Nil(t, err)
 
-	data, err = ioutil.ReadFile(mainTpl)
+	data, err = os.ReadFile(mainTpl)
 	if err != nil {
 		return
 	}
@@ -59,9 +59,9 @@ func TestRevertTemplate(t *testing.T) {
 
 func TestClean(t *testing.T) {
 	_ = Clean()
-	err := GenTemplates(nil)
+	err := GenTemplates()
 	assert.Nil(t, err)
-	fp, err := util.GetTemplateDir(category)
+	fp, err := pathx.GetTemplateDir(category)
 	if err != nil {
 		return
 	}
@@ -78,20 +78,20 @@ func TestClean(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	_ = Clean()
-	err := GenTemplates(nil)
+	err := GenTemplates()
 	assert.Nil(t, err)
-	fp, err := util.GetTemplateDir(category)
+	fp, err := pathx.GetTemplateDir(category)
 	if err != nil {
 		return
 	}
 	mainTpl := filepath.Join(fp, mainTemplateFile)
 
-	err = ioutil.WriteFile(mainTpl, []byte("modify"), os.ModePerm)
+	err = os.WriteFile(mainTpl, []byte("modify"), os.ModePerm)
 	if err != nil {
 		return
 	}
 
-	data, err := ioutil.ReadFile(mainTpl)
+	data, err := os.ReadFile(mainTpl)
 	if err != nil {
 		return
 	}
@@ -99,7 +99,7 @@ func TestUpdate(t *testing.T) {
 
 	assert.Nil(t, Update())
 
-	data, err = ioutil.ReadFile(mainTpl)
+	data, err = os.ReadFile(mainTpl)
 	if err != nil {
 		return
 	}

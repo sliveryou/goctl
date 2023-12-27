@@ -6,7 +6,7 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/logrusorgru/aurora"
-	"github.com/tal-tech/go-zero/core/stringx"
+	"github.com/zeromicro/go-zero/core/stringx"
 
 	"github.com/sliveryou/goctl/api/spec"
 	"github.com/sliveryou/goctl/util"

@@ -4,22 +4,31 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/logrusorgru/aurora"
+	"github.com/gookit/color"
+	"github.com/spf13/cobra"
+
 	"github.com/sliveryou/goctl/api/parser"
-	"github.com/urfave/cli"
 )
 
+// VarStringAPI describes an API.
+var VarStringAPI string
+
 // GoValidateApi verifies whether the api has a syntax error
-func GoValidateApi(c *cli.Context) error {
-	apiFile := c.String("api")
+func GoValidateApi(_ *cobra.Command, _ []string) error {
+	apiFile := VarStringAPI
 
 	if len(apiFile) == 0 {
 		return errors.New("missing -api")
 	}
 
-	_, err := parser.Parse(apiFile)
+	spec, err := parser.Parse(apiFile)
+	if err != nil {
+		return err
+	}
+
+	err = spec.Validate()
 	if err == nil {
-		fmt.Println(aurora.Green("api format ok"))
+		fmt.Println(color.Green.Render("api format ok"))
 	}
 	return err
 }

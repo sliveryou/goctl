@@ -3,10 +3,8 @@ package console
 import (
 	"fmt"
 	"os"
-	"runtime"
 
-	"github.com/logrusorgru/aurora"
-	"github.com/sliveryou/goctl/vars"
+	"github.com/gookit/color"
 )
 
 type (
@@ -14,17 +12,19 @@ type (
 	// by default, it implemented the colorConsole to provide the colorful output to the console
 	// and the ideaConsole to output with prefix for the plugin of intellij
 	Console interface {
-		Success(format string, a ...interface{})
-		Info(format string, a ...interface{})
-		Debug(format string, a ...interface{})
-		Warning(format string, a ...interface{})
-		Error(format string, a ...interface{})
-		Fatalln(format string, a ...interface{})
+		Success(format string, a ...any)
+		Info(format string, a ...any)
+		Debug(format string, a ...any)
+		Warning(format string, a ...any)
+		Error(format string, a ...any)
+		Fatalln(format string, a ...any)
 		MarkDone()
 		Must(err error)
 	}
 
-	colorConsole struct{}
+	colorConsole struct {
+		enable bool
+	}
 
 	// for idea log
 	ideaConsole struct{}
@@ -39,81 +39,106 @@ func NewConsole(idea bool) Console {
 }
 
 // NewColorConsole returns an instance of colorConsole
-func NewColorConsole() Console {
-	return &colorConsole{}
+func NewColorConsole(enable ...bool) Console {
+	logEnable := true
+	for _, e := range enable {
+		logEnable = e
+	}
+	return &colorConsole{
+		enable: logEnable,
+	}
 }
 
-func (c *colorConsole) Info(format string, a ...interface{}) {
+func (c *colorConsole) Info(format string, a ...any) {
+	if !c.enable {
+		return
+	}
 	msg := fmt.Sprintf(format, a...)
 	fmt.Println(msg)
 }
 
-func (c *colorConsole) Debug(format string, a ...interface{}) {
-	msg := fmt.Sprintf(format, a...)
-	println(aurora.Blue(msg))
+func (c *colorConsole) Debug(format string, a ...any) {
+	if !c.enable {
+		return
+	}
+	println(color.LightCyan.Sprintf(format, a...))
 }
 
-func (c *colorConsole) Success(format string, a ...interface{}) {
-	msg := fmt.Sprintf(format, a...)
-	println(aurora.Green(msg))
+func (c *colorConsole) Success(format string, a ...any) {
+	if !c.enable {
+		return
+	}
+	println(color.LightGreen.Sprintf(format, a...))
 }
 
-func (c *colorConsole) Warning(format string, a ...interface{}) {
-	msg := fmt.Sprintf(format, a...)
-	println(aurora.Yellow(msg))
+func (c *colorConsole) Warning(format string, a ...any) {
+	if !c.enable {
+		return
+	}
+	println(color.LightYellow.Sprintf(format, a...))
 }
 
-func (c *colorConsole) Error(format string, a ...interface{}) {
-	msg := fmt.Sprintf(format, a...)
-	println(aurora.Red(msg))
+func (c *colorConsole) Error(format string, a ...any) {
+	if !c.enable {
+		return
+	}
+	println(color.LightRed.Sprintf(format, a...))
 }
 
-func (c *colorConsole) Fatalln(format string, a ...interface{}) {
+func (c *colorConsole) Fatalln(format string, a ...any) {
+	if !c.enable {
+		return
+	}
 	c.Error(format, a...)
 	os.Exit(1)
 }
 
 func (c *colorConsole) MarkDone() {
+	if !c.enable {
+		return
+	}
 	c.Success("Done.")
 }
 
 func (c *colorConsole) Must(err error) {
+	if !c.enable {
+		return
+	}
 	if err != nil {
 		c.Fatalln("%+v", err)
 	}
 }
 
-// NewIdeaConsole returns a instance of ideaConsole
+// NewIdeaConsole returns an instance of ideaConsole
 func NewIdeaConsole() Console {
 	return &ideaConsole{}
 }
 
-func (i *ideaConsole) Info(format string, a ...interface{}) {
+func (i *ideaConsole) Info(format string, a ...any) {
 	msg := fmt.Sprintf(format, a...)
 	fmt.Println(msg)
 }
 
-func (i *ideaConsole) Debug(format string, a ...interface{}) {
-	msg := fmt.Sprintf(format, a...)
-	fmt.Println(aurora.Blue(msg))
+func (i *ideaConsole) Debug(format string, a ...any) {
+	fmt.Println(color.LightCyan.Sprintf(format, a...))
 }
 
-func (i *ideaConsole) Success(format string, a ...interface{}) {
+func (i *ideaConsole) Success(format string, a ...any) {
 	msg := fmt.Sprintf(format, a...)
 	fmt.Println("[SUCCESS]: ", msg)
 }
 
-func (i *ideaConsole) Warning(format string, a ...interface{}) {
+func (i *ideaConsole) Warning(format string, a ...any) {
 	msg := fmt.Sprintf(format, a...)
 	fmt.Println("[WARNING]: ", msg)
 }
 
-func (i *ideaConsole) Error(format string, a ...interface{}) {
+func (i *ideaConsole) Error(format string, a ...any) {
 	msg := fmt.Sprintf(format, a...)
 	fmt.Println("[ERROR]: ", msg)
 }
 
-func (i *ideaConsole) Fatalln(format string, a ...interface{}) {
+func (i *ideaConsole) Fatalln(format string, a ...any) {
 	i.Error(format, a...)
 	os.Exit(1)
 }
@@ -128,44 +153,33 @@ func (i *ideaConsole) Must(err error) {
 	}
 }
 
-func println(msg interface{}) {
-	value, ok := msg.(aurora.Value)
-	if !ok {
-		fmt.Println(msg)
-	}
-
-	goos := runtime.GOOS
-	if goos == vars.OsWindows {
-		fmt.Println(value.Value())
-		return
-	}
-
+func println(msg any) {
 	fmt.Println(msg)
 }
 
-var defaultConsole = new(colorConsole)
+var defaultConsole = &colorConsole{enable: true}
 
-func Success(format string, a ...interface{}) {
+func Success(format string, a ...any) {
 	defaultConsole.Success(format, a...)
 }
 
-func Info(format string, a ...interface{}) {
+func Info(format string, a ...any) {
 	defaultConsole.Info(format, a...)
 }
 
-func Debug(format string, a ...interface{}) {
+func Debug(format string, a ...any) {
 	defaultConsole.Debug(format, a...)
 }
 
-func Warning(format string, a ...interface{}) {
+func Warning(format string, a ...any) {
 	defaultConsole.Warning(format, a...)
 }
 
-func Error(format string, a ...interface{}) {
+func Error(format string, a ...any) {
 	defaultConsole.Error(format, a...)
 }
 
-func Fatalln(format string, a ...interface{}) {
+func Fatalln(format string, a ...any) {
 	defaultConsole.Fatalln(format, a...)
 }
 

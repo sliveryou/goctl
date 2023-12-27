@@ -3,10 +3,12 @@ package util
 import (
 	"bytes"
 	goformat "go/format"
-	"io/ioutil"
+	"os"
+	"regexp"
 	"text/template"
 
 	"github.com/sliveryou/goctl/internal/errorx"
+	"github.com/sliveryou/goctl/util/pathx"
 )
 
 const regularPerm = 0o666
@@ -18,7 +20,7 @@ type DefaultTemplate struct {
 	goFmt bool
 }
 
-// With returns a instance of DefaultTemplate
+// With returns an instance of DefaultTemplate
 func With(name string) *DefaultTemplate {
 	return &DefaultTemplate{
 		name: name,
@@ -38,8 +40,8 @@ func (t *DefaultTemplate) GoFmt(format bool) *DefaultTemplate {
 }
 
 // SaveTo writes the codes to the target path
-func (t *DefaultTemplate) SaveTo(data interface{}, path string, forceUpdate bool) error {
-	if FileExists(path) && !forceUpdate {
+func (t *DefaultTemplate) SaveTo(data any, path string, forceUpdate bool) error {
+	if pathx.FileExists(path) && !forceUpdate {
 		return nil
 	}
 
@@ -48,11 +50,11 @@ func (t *DefaultTemplate) SaveTo(data interface{}, path string, forceUpdate bool
 		return err
 	}
 
-	return ioutil.WriteFile(path, output.Bytes(), regularPerm)
+	return os.WriteFile(path, output.Bytes(), regularPerm)
 }
 
 // Execute returns the codes after the template executed
-func (t *DefaultTemplate) Execute(data interface{}) (*bytes.Buffer, error) {
+func (t *DefaultTemplate) Execute(data any) (*bytes.Buffer, error) {
 	tem, err := template.New(t.name).Parse(t.text)
 	if err != nil {
 		return nil, errorx.Wrap(err, "template parse error:", t.text)
@@ -75,4 +77,19 @@ func (t *DefaultTemplate) Execute(data interface{}) (*bytes.Buffer, error) {
 	buf.Reset()
 	buf.Write(formatOutput)
 	return buf, nil
+}
+
+// IsTemplateVariable returns true if the text is a template variable.
+// The text must start with a dot and be a valid template.
+func IsTemplateVariable(text string) bool {
+	match, _ := regexp.MatchString(`(?m)^{{(\.\w+)+}}$`, text)
+	return match
+}
+
+// TemplateVariable returns the variable name of the template.
+func TemplateVariable(text string) string {
+	if IsTemplateVariable(text) {
+		return text[3 : len(text)-2]
+	}
+	return ""
 }

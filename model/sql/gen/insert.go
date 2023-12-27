@@ -2,12 +2,15 @@ package gen
 
 import (
 	"fmt"
+	"sort"
 	"strings"
+
+	"github.com/zeromicro/go-zero/core/collection"
 
 	"github.com/sliveryou/goctl/model/sql/template"
 	"github.com/sliveryou/goctl/util"
+	"github.com/sliveryou/goctl/util/pathx"
 	"github.com/sliveryou/goctl/util/stringx"
-	"github.com/tal-tech/go-zero/core/collection"
 )
 
 func genInsert(table Table, withCache, postgreSql bool) (string, string, error) {
@@ -19,13 +22,17 @@ func genInsert(table Table, withCache, postgreSql bool) (string, string, error) 
 		keySet.AddStr(key.DataKeyExpression)
 		keyVariableSet.AddStr(key.KeyLeft)
 	}
+	keys := keySet.KeysStr()
+	sort.Strings(keys)
+	keyVars := keyVariableSet.KeysStr()
+	sort.Strings(keyVars)
 
 	expressions := make([]string, 0)
 	expressionValues := make([]string, 0)
 	var count int
 	for _, field := range table.Fields {
-		camel := field.Name.ToCamel()
-		if camel == "CreateTime" || camel == "UpdateTime" {
+		camel := util.SafeString(field.Name.ToCamel())
+		if table.isIgnoreColumns(field.Name.Source()) {
 			continue
 		}
 
@@ -45,35 +52,36 @@ func genInsert(table Table, withCache, postgreSql bool) (string, string, error) 
 	}
 
 	camel := table.Name.ToCamel()
-	text, err := util.LoadTemplate(category, insertTemplateFile, template.Insert)
+	text, err := pathx.LoadTemplate(category, insertTemplateFile, template.Insert)
 	if err != nil {
 		return "", "", err
 	}
 
 	output, err := util.With("insert").
 		Parse(text).
-		Execute(map[string]interface{}{
+		Execute(map[string]any{
 			"withCache":             withCache,
-			"containsIndexCache":    table.ContainsUniqueCacheKey,
 			"upperStartCamelObject": camel,
 			"lowerStartCamelObject": stringx.From(camel).Untitle(),
 			"expression":            strings.Join(expressions, ", "),
 			"expressionValues":      strings.Join(expressionValues, ", "),
-			"keys":                  strings.Join(keySet.KeysStr(), "\n"),
-			"keyValues":             strings.Join(keyVariableSet.KeysStr(), ", "),
+			"keys":                  strings.Join(keys, "\n"),
+			"keyValues":             strings.Join(keyVars, ", "),
+			"data":                  table,
 		})
 	if err != nil {
 		return "", "", err
 	}
 
 	// interface method
-	text, err = util.LoadTemplate(category, insertTemplateMethodFile, template.InsertMethod)
+	text, err = pathx.LoadTemplate(category, insertTemplateMethodFile, template.InsertMethod)
 	if err != nil {
 		return "", "", err
 	}
 
-	insertMethodOutput, err := util.With("insertMethod").Parse(text).Execute(map[string]interface{}{
+	insertMethodOutput, err := util.With("insertMethod").Parse(text).Execute(map[string]any{
 		"upperStartCamelObject": camel,
+		"data":                  table,
 	})
 	if err != nil {
 		return "", "", err

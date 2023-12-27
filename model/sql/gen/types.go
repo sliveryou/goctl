@@ -3,27 +3,31 @@ package gen
 import (
 	"github.com/sliveryou/goctl/model/sql/template"
 	"github.com/sliveryou/goctl/util"
+	"github.com/sliveryou/goctl/util/pathx"
+	"github.com/sliveryou/goctl/util/stringx"
 )
 
 func genTypes(table Table, methods string, withCache bool) (string, error) {
 	fields := table.Fields
-	fieldsString, err := genFields(fields)
+	fieldsString, err := genFields(table, fields)
 	if err != nil {
 		return "", err
 	}
 
-	text, err := util.LoadTemplate(category, typesTemplateFile, template.Types)
+	text, err := pathx.LoadTemplate(category, typesTemplateFile, template.Types)
 	if err != nil {
 		return "", err
 	}
 
 	output, err := util.With("types").
 		Parse(text).
-		Execute(map[string]interface{}{
+		Execute(map[string]any{
 			"withCache":             withCache,
 			"method":                methods,
 			"upperStartCamelObject": table.Name.ToCamel(),
+			"lowerStartCamelObject": stringx.From(table.Name.ToCamel()).Untitle(),
 			"fields":                fieldsString,
+			"data":                  table,
 		})
 	if err != nil {
 		return "", err

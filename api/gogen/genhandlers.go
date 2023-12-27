@@ -1,72 +1,46 @@
 package gogen
 
 import (
+	_ "embed"
 	"fmt"
 	"path"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/tal-tech/go-zero/core/stringx"
+	"github.com/zeromicro/go-zero/core/stringx"
 
 	"github.com/sliveryou/goctl/api/spec"
 	"github.com/sliveryou/goctl/config"
-	"github.com/sliveryou/goctl/internal/version"
 	"github.com/sliveryou/goctl/util"
 	"github.com/sliveryou/goctl/util/format"
-	"github.com/sliveryou/goctl/vars"
+	"github.com/sliveryou/goctl/util/pathx"
 )
 
-const (
-	defaultLogicPackage = "logic"
-	handlerTemplate     = `package {{.PkgName}}
+const defaultLogicPackage = "logic"
 
-import (
-	"net/http"
-
-	{{if .After1_1_10}}"github.com/tal-tech/go-zero/rest/httpx"{{end}}
-	{{.ImportPackages}}
-)
-
-func {{.HandlerName}}(svcCtx *svc.ServiceContext) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		{{if .HasRequest}}var req types.{{.RequestType}}
-		if err := httpx.Parse(r, &req); err != nil {
-			httpx.Error(w, err)
-			return
-		}
-
-		{{end}}l := {{.LogicName}}.New{{.LogicType}}(r.Context(), svcCtx)
-		{{if .HasResp}}resp, {{end}}err := l.{{.Call}}({{if .HasRequest}}req{{end}})
-		if err != nil {
-			httpx.Error(w, err)
-		} else {
-			{{if .HasResp}}httpx.OkJson(w, resp){{else}}httpx.Ok(w){{end}}
-		}
-	}
-}
-`
-)
+//go:embed handler.tpl
+var handlerTemplate string
 
 type handlerInfo struct {
-	PkgName        string
-	ImportPackages string
-	HandlerName    string
-	PathName       string
-	MethodName     string
-	Tag            string
-	Summary        string
-	ResponseType   string
-	RequestType    string
-	LogicName      string
-	LogicType      string
-	Call           string
-	HasResp        bool
-	HasRequest     bool
-	HasSecurity    bool
-	After1_1_10    bool
-	HasRequestBody bool
-	SwagParams     []swagParam
+	PkgName            string
+	ImportPackages     string
+	ImportHttpxPackage string
+	HandlerName        string
+	PathName           string
+	MethodName         string
+	Tag                string
+	Summary            string
+	ResponseType       string
+	RequestType        string
+	LogicName          string
+	LogicType          string
+	Call               string
+	HasResp            bool
+	HasRequest         bool
+	HasSecurity        bool
+	HasRequestBody     bool
+	SwagParams         []swagParam
 }
 
 func genHandler(dir, rootPkg string, cfg *config.Config, group spec.Group, route spec.Route) error {
@@ -78,10 +52,7 @@ func genHandler(dir, rootPkg string, cfg *config.Config, group spec.Group, route
 		handler = strings.Title(handler)
 		logicName = pkgName
 	}
-	parentPkg, err := getParentPackage(dir)
-	if err != nil {
-		return err
-	}
+
 	tag := "Tag"
 	if a := group.GetAnnotation("tag"); a != "" {
 		tag = strings.Trim(a, `"`)
@@ -99,10 +70,6 @@ func genHandler(dir, rootPkg string, cfg *config.Config, group spec.Group, route
 		}
 	}
 
-	goctlVersion := version.GetGoctlVersion()
-	// todo(anqiansong): This will be removed after a certain number of production versions of goctl (probably 5)
-	after1_1_10 := version.IsVersionGreaterThan(goctlVersion, "1.1.10")
-
 	reg := regexp.MustCompile(`/:([^/]+)`)
 	pathName := reg.ReplaceAllString(strings.TrimSpace(route.Path), "/{${1}}")
 	methodName := strings.ToLower(strings.TrimSpace(route.Method))
@@ -110,7 +77,7 @@ func genHandler(dir, rootPkg string, cfg *config.Config, group spec.Group, route
 
 	return doGenToFile(dir, handler, cfg, group, route, handlerInfo{
 		PkgName:        pkgName,
-		ImportPackages: genHandlerImports(group, route, parentPkg),
+		ImportPackages: genHandlerImports(group, route, rootPkg),
 		HandlerName:    handler,
 		PathName:       pathName,
 		MethodName:     methodName,
@@ -124,7 +91,6 @@ func genHandler(dir, rootPkg string, cfg *config.Config, group spec.Group, route
 		HasResp:        len(route.ResponseTypeName()) > 0,
 		HasRequest:     len(route.RequestTypeName()) > 0,
 		HasSecurity:    hasSecurity,
-		After1_1_10:    after1_1_10,
 		HasRequestBody: len(route.RequestTypeName()) > 0 && len(sps) == 0,
 		SwagParams:     sps,
 	})
@@ -162,18 +128,12 @@ func genHandlers(dir, rootPkg string, cfg *config.Config, api *spec.ApiSpec) err
 }
 
 func genHandlerImports(group spec.Group, route spec.Route, parentPkg string) string {
-	var imports []string
-	imports = append(imports, fmt.Sprintf("\"%s\"",
-		util.JoinPackages(parentPkg, getLogicFolderPath(group, route))))
-	imports = append(imports, fmt.Sprintf("\"%s\"", util.JoinPackages(parentPkg, contextDir)))
-	if len(route.RequestTypeName()) > 0 {
-		imports = append(imports, fmt.Sprintf("\"%s\"\n", util.JoinPackages(parentPkg, typesDir)))
+	imports := []string{
+		fmt.Sprintf("\"%s\"", pathx.JoinPackages(parentPkg, getLogicFolderPath(group, route))),
+		fmt.Sprintf("\"%s\"", pathx.JoinPackages(parentPkg, contextDir)),
 	}
-
-	currentVersion := version.GetGoctlVersion()
-	// todo(anqiansong): This will be removed after a certain number of production versions of goctl (probably 5)
-	if !version.IsVersionGreaterThan(currentVersion, "1.1.10") {
-		imports = append(imports, fmt.Sprintf("\"%s/rest/httpx\"", vars.ProjectOpenSourceURL))
+	if len(route.RequestTypeName()) > 0 {
+		imports = append(imports, fmt.Sprintf("\"%s\"\n", pathx.JoinPackages(parentPkg, typesDir)))
 	}
 
 	return strings.Join(imports, "\n\t")

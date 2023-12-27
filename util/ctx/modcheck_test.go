@@ -6,10 +6,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/sliveryou/goctl/rpc/execx"
-	"github.com/sliveryou/goctl/util"
 	"github.com/stretchr/testify/assert"
-	"github.com/tal-tech/go-zero/core/stringx"
+	"github.com/zeromicro/go-zero/core/stringx"
+
+	"github.com/sliveryou/goctl/rpc/execx"
+	"github.com/sliveryou/goctl/util/pathx"
 )
 
 func TestIsGoMod(t *testing.T) {
@@ -21,7 +22,7 @@ func TestIsGoMod(t *testing.T) {
 	}
 	projectName := stringx.Rand()
 	dir := filepath.Join(gp, "src", projectName)
-	err := util.MkdirIfNotExist(dir)
+	err := pathx.MkdirIfNotExist(dir)
 	if err != nil {
 		return
 	}
@@ -45,7 +46,7 @@ func TestIsGoModNot(t *testing.T) {
 	}
 	projectName := stringx.Rand()
 	dir := filepath.Join(gp, "src", projectName)
-	err := util.MkdirIfNotExist(dir)
+	err := pathx.MkdirIfNotExist(dir)
 	if err != nil {
 		return
 	}
