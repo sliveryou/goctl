@@ -41,9 +41,12 @@ type handlerInfo struct {
 	HasSecurity        bool
 	HasRequestBody     bool
 	SwagParams         []swagParam
+	ResponseParamType  string
+	ResponseDataType   string
+	Accept             string
 }
 
-func genHandler(dir, rootPkg string, cfg *config.Config, group spec.Group, route spec.Route) error {
+func genHandler(dir, rootPkg, srvName string, cfg *config.Config, group spec.Group, route spec.Route) error {
 	handler := getHandlerName(route)
 	handlerPath := getHandlerFolderPath(group, route)
 	pkgName := handlerPath[strings.LastIndex(handlerPath, "/")+1:]
@@ -56,6 +59,8 @@ func genHandler(dir, rootPkg string, cfg *config.Config, group spec.Group, route
 	tag := "Tag"
 	if a := group.GetAnnotation("tag"); a != "" {
 		tag = strings.Trim(a, `"`)
+	} else {
+		tag = strings.ToLower(srvName) + "/" + group.GetAnnotation("group")
 	}
 	summary := "Summary"
 	if route.AtDoc.Properties != nil {
@@ -73,26 +78,40 @@ func genHandler(dir, rootPkg string, cfg *config.Config, group spec.Group, route
 	reg := regexp.MustCompile(`/:([^/]+)`)
 	pathName := reg.ReplaceAllString(strings.TrimSpace(route.Path), "/{${1}}")
 	methodName := strings.ToLower(strings.TrimSpace(route.Method))
-	sps := getSwagParams(route)
+
+	sps, existJsonTag, existFormTag := getSwagParams(route)
+	respType := util.Title(route.ResponseTypeName())
+	respDataType := strings.TrimPrefix(strings.TrimPrefix(respType, "[]"), "*")
+	respParamType := "{object}"
+	if len(respType) != len(respDataType) {
+		respParamType = "{array}"
+	}
+	accept := "application/json"
+	if methodName != "get" && !existJsonTag && existFormTag {
+		accept = "multipart/form-data"
+	}
 
 	return doGenToFile(dir, handler, cfg, group, route, handlerInfo{
-		PkgName:        pkgName,
-		ImportPackages: genHandlerImports(group, route, rootPkg),
-		HandlerName:    handler,
-		PathName:       pathName,
-		MethodName:     methodName,
-		Tag:            tag,
-		Summary:        summary,
-		ResponseType:   util.Title(route.ResponseTypeName()),
-		RequestType:    util.Title(route.RequestTypeName()),
-		LogicName:      logicName,
-		LogicType:      strings.Title(getLogicName(route)),
-		Call:           strings.Title(strings.TrimSuffix(handler, "Handler")),
-		HasResp:        len(route.ResponseTypeName()) > 0,
-		HasRequest:     len(route.RequestTypeName()) > 0,
-		HasSecurity:    hasSecurity,
-		HasRequestBody: len(route.RequestTypeName()) > 0 && len(sps) == 0,
-		SwagParams:     sps,
+		PkgName:           pkgName,
+		ImportPackages:    genHandlerImports(group, route, rootPkg),
+		HandlerName:       handler,
+		PathName:          pathName,
+		MethodName:        methodName,
+		Tag:               tag,
+		Summary:           summary,
+		ResponseType:      util.Title(route.ResponseTypeName()),
+		RequestType:       util.Title(route.RequestTypeName()),
+		LogicName:         logicName,
+		LogicType:         strings.Title(getLogicName(route)),
+		Call:              strings.Title(strings.TrimSuffix(handler, "Handler")),
+		HasResp:           len(route.ResponseTypeName()) > 0,
+		HasRequest:        len(route.RequestTypeName()) > 0,
+		HasSecurity:       hasSecurity,
+		HasRequestBody:    len(route.RequestTypeName()) > 0 && existJsonTag,
+		SwagParams:        sps,
+		ResponseParamType: respParamType,
+		ResponseDataType:  respDataType,
+		Accept:            accept,
 	})
 }
 
@@ -118,7 +137,7 @@ func doGenToFile(dir, handler string, cfg *config.Config, group spec.Group,
 func genHandlers(dir, rootPkg string, cfg *config.Config, api *spec.ApiSpec) error {
 	for _, group := range api.Service.Groups {
 		for _, route := range group.Routes {
-			if err := genHandler(dir, rootPkg, cfg, group, route); err != nil {
+			if err := genHandler(dir, rootPkg, api.Service.Name, cfg, group, route); err != nil {
 				return err
 			}
 		}
@@ -188,21 +207,23 @@ type swagParam struct {
 	Attribute   string
 }
 
-func getSwagParams(route spec.Route) []swagParam {
+func getSwagParams(route spec.Route) ([]swagParam, bool, bool) {
 	rt := route.RequestType
-	methodName := strings.ToLower(strings.TrimSpace(route.Method))
+	method := strings.ToLower(strings.TrimSpace(route.Method))
 
-	if rt != nil && methodName == "get" {
+	if rt != nil {
 		if ds, ok := rt.(spec.DefineStruct); ok {
-			return parseSwagParams(ds)
+			return parseSwagParams(ds, method)
 		}
 	}
 
-	return nil
+	return nil, false, false
 }
 
-func parseSwagParams(ds spec.DefineStruct) []swagParam {
+func parseSwagParams(ds spec.DefineStruct, method string) ([]swagParam, bool, bool) {
 	var sps []swagParam
+	existJsonTag := false
+	existFormTag := false
 
 	for _, m := range ds.Members {
 		switch mt := convertSpec(m.Type).(type) {
@@ -213,10 +234,17 @@ func parseSwagParams(ds spec.DefineStruct) []swagParam {
 				break
 			}
 			for _, tag := range tags.Tags() {
-				if tag.Key == "form" {
+				paramType, findJsonTag, findFormTag := getParamType(tag.Key, method)
+				if findJsonTag {
+					existJsonTag = true
+				}
+				if findFormTag {
+					existFormTag = true
+				}
+				if paramType != "" {
 					sps = append(sps, swagParam{
 						ParamName:   tag.Name,
-						ParamType:   "query",
+						ParamType:   paramType,
 						DataType:    getDataType(mt.RawName),
 						IsMandatory: strconv.FormatBool(!stringx.Contains(tag.Options, "optional")),
 						Comment:     getComment(m.Comment),
@@ -232,10 +260,17 @@ func parseSwagParams(ds spec.DefineStruct) []swagParam {
 					break
 				}
 				for _, tag := range tags.Tags() {
-					if tag.Key == "form" {
+					paramType, findJsonTag, findFormTag := getParamType(tag.Key, method)
+					if findJsonTag {
+						existJsonTag = true
+					}
+					if findFormTag {
+						existFormTag = true
+					}
+					if paramType == "query" || paramType == "formData" {
 						sps = append(sps, swagParam{
 							ParamName:   tag.Name,
-							ParamType:   "query",
+							ParamType:   paramType,
 							DataType:    "[]" + getDataType(vt.RawName),
 							IsMandatory: strconv.FormatBool(!stringx.Contains(tag.Options, "optional")),
 							Comment:     getComment(m.Comment),
@@ -247,12 +282,19 @@ func parseSwagParams(ds spec.DefineStruct) []swagParam {
 			}
 		case spec.DefineStruct:
 			if m.IsInline {
-				sps = append(sps, parseSwagParams(mt)...)
+				s, jt, ft := parseSwagParams(mt, method)
+				if jt {
+					existJsonTag = true
+				}
+				if ft {
+					existFormTag = true
+				}
+				sps = append(sps, s...)
 			}
 		}
 	}
 
-	return sps
+	return sps, existJsonTag, existFormTag
 }
 
 func getDataType(dataType string) string {
@@ -286,4 +328,24 @@ func convertSpec(t spec.Type) spec.Type {
 
 func getComment(comment string) string {
 	return strings.TrimSpace(strings.TrimPrefix(comment, "//"))
+}
+
+func getParamType(key, method string) (paramType string, findJsonTag, findFormTag bool) {
+	switch key {
+	case "path":
+		paramType = "path"
+	case "form":
+		if method == "get" {
+			paramType = "query"
+		} else {
+			paramType = "formData"
+		}
+		findFormTag = true
+	case "header":
+		paramType = "header"
+	case "json":
+		findJsonTag = true
+	}
+
+	return
 }

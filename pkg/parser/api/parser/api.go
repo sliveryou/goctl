@@ -336,6 +336,5 @@ func (api *API) SelfCheck() error {
 	if err := api.checkServiceStmt(); err != nil {
 		return err
 	}
-	// return api.checkTypeDeclareContext()
-	return nil
+	return api.checkTypeDeclareContext()
 }

@@ -13,13 +13,13 @@ import (
 // @Summary {{.Summary}}
 {{- if .HasSecurity}}
 // @Security ApiKeyAuth{{end}}
-// @Accept application/json
+// @Accept {{.Accept}}
 // @Produce application/json
-{{- if .HasRequestBody}}
-// @Param data body types.{{.RequestType}} true "{{.Summary}}"{{end}}
 {{- range .SwagParams}}
 // @Param {{.ParamName}} {{.ParamType}} {{.DataType}} {{.IsMandatory}} "{{.Comment}}" {{.Attribute}}{{- end}}
-// @Success 200 {object} types.{{.ResponseType}} "{"id":1}"
+{{- if .HasRequestBody}}
+// @Param data body types.{{.RequestType}} true "{{.Summary}}"{{end}}
+// @Success 200 {{.ResponseParamType}} types.{{.ResponseDataType}} "{"id":1}"
 // @Router {{.PathName}} [{{.MethodName}}]
 func {{.HandlerName}}(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
