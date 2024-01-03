@@ -114,6 +114,11 @@ func (g *Generator) genLogicGroup(ctx DirContext, proto parser.Proto, cfg *conf.
 				return err
 			}
 
+			comment := "业务逻辑"
+			if fs := strings.Fields(parser.GetComment(rpc.Doc())); len(fs) > 2 {
+				comment = fs[2]
+			}
+
 			imports := collection.NewSet()
 			imports.AddStr(fmt.Sprintf(`"%v"`, ctx.GetSvc().Package))
 			imports.AddStr(fmt.Sprintf(`"%v"`, ctx.GetPb().Package))
@@ -127,6 +132,7 @@ func (g *Generator) genLogicGroup(ctx DirContext, proto parser.Proto, cfg *conf.
 				"functions":   functions,
 				"packageName": packageName,
 				"imports":     strings.Join(imports.KeysStr(), pathx.NL),
+				"comment":     comment,
 			}, filename, false); err != nil {
 				return err
 			}
