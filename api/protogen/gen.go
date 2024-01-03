@@ -57,7 +57,7 @@ func DoGenProto(apiFile, dir string) error {
 
 	rs, hasEmpty := BuildRPCs(api)
 
-	_, err = f.WriteString("syntax = \"proto3\";\n\npackage rpc;")
+	_, err = f.WriteString("syntax = \"proto3\";\n\noption go_package = \"./pb\";\n\npackage pb;")
 	logx.Must(err)
 
 	if hasEmpty {

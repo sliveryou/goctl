@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	indent = "  "
+	indent = "    "
 )
 
 // BuildTypes gen types to string
@@ -43,15 +43,18 @@ func writeMessage(b *strings.Builder, t spec.Type) error {
 
 	for i, mf := range mfs {
 		repeated := ""
+		optional := ""
 		if mf.IsRepeated {
 			repeated = "repeated "
+		} else if mf.IsPointer {
+			optional = "optional "
 		}
 		comment := ""
 		if len(mf.Comment) > 0 {
 			comment = " // " + mf.Comment
 		}
-		b.WriteString(fmt.Sprintf("%s%s%s %s = %d;%s\n",
-			indent, repeated, mf.FieldType, mf.FieldName, i+1, comment))
+		b.WriteString(fmt.Sprintf("%s%s%s%s %s = %d;%s\n",
+			indent, repeated, optional, mf.FieldType, mf.FieldName, i+1, comment))
 	}
 
 	b.WriteByte('}')
@@ -60,19 +63,26 @@ func writeMessage(b *strings.Builder, t spec.Type) error {
 }
 
 type messageField struct {
-	FieldName  string
-	FieldType  string
-	Comment    string
-	IsRepeated bool
+	FieldName      string
+	FieldType      string
+	Comment        string
+	IsRepeated     bool
+	IsPointer      bool
+	MessageName    string
+	MessageComment string
 }
 
 func parseMessageFields(ds spec.DefineStruct) []messageField {
 	var mfs []messageField
+	replacer := strings.NewReplacer("__", "_", ".", "_", " ", "_")
 
 	for _, m := range ds.Members {
 		var tagName string
 		if tag := getUsefulTag(m.Tag); tag != nil {
-			tagName = tag.Name
+			tagName = replacer.Replace(tag.Name)
+			if tagSnakeName := strcase.ToSnake(tagName); tagSnakeName != tagName {
+				tagName = tagSnakeName
+			}
 		}
 		if tagName == "" {
 			if m.Name == "" {
@@ -82,13 +92,15 @@ func parseMessageFields(ds spec.DefineStruct) []messageField {
 			}
 		}
 
-		switch mt := convertSpec(m.Type).(type) {
+		mt, isPointer := convertSpec(m.Type)
+		switch mt := (mt).(type) {
 		case spec.PrimitiveType:
 			mfs = append(mfs, messageField{
 				FieldName:  tagName,
 				FieldType:  getFieldType(mt.RawName),
 				Comment:    getComment(m.Comment),
 				IsRepeated: false,
+				IsPointer:  isPointer,
 			})
 		case spec.ArrayType:
 			mf := messageField{
@@ -96,6 +108,7 @@ func parseMessageFields(ds spec.DefineStruct) []messageField {
 				FieldType:  trimPrefix(mt.RawName),
 				Comment:    getComment(m.Comment),
 				IsRepeated: true,
+				IsPointer:  isPointer,
 			}
 			if mf.FieldType == "byte" {
 				mf.FieldType = "bytes"
@@ -111,6 +124,7 @@ func parseMessageFields(ds spec.DefineStruct) []messageField {
 					FieldType:  getFieldType(mt.RawName),
 					Comment:    getComment(m.Comment),
 					IsRepeated: false,
+					IsPointer:  isPointer,
 				})
 			}
 		default:
@@ -161,18 +175,22 @@ func getFieldType(dataType string) string {
 	}
 }
 
-func convertSpec(t spec.Type) spec.Type {
-	var tt spec.PointerType
-	var ok = true
+func convertSpec(t spec.Type) (spec.Type, bool) {
+	var (
+		tt        spec.PointerType
+		ok        = true
+		isPointer = false
+	)
 
 	for ok {
 		tt, ok = t.(spec.PointerType)
 		if ok {
 			t = tt.Type
+			isPointer = true
 		}
 	}
 
-	return t
+	return t, isPointer
 }
 
 func getDoc(st spec.DefineStruct) string {
