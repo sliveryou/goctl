@@ -74,6 +74,10 @@ func genHandler(dir, rootPkg, srvName string, cfg *config.Config, group spec.Gro
 			hasSecurity = true
 		}
 	}
+	prefix := ""
+	if p := group.GetAnnotation(spec.RoutePrefixKey); p != "" {
+		prefix = strings.TrimSpace(strings.Trim(p, `"`))
+	}
 
 	reg := regexp.MustCompile(`/:([^/]+)`)
 	pathName := reg.ReplaceAllString(strings.TrimSpace(route.Path), "/{${1}}")
@@ -95,7 +99,7 @@ func genHandler(dir, rootPkg, srvName string, cfg *config.Config, group spec.Gro
 		PkgName:           pkgName,
 		ImportPackages:    genHandlerImports(group, route, rootPkg),
 		HandlerName:       handler,
-		PathName:          pathName,
+		PathName:          path.Join("/", prefix, pathName),
 		MethodName:        methodName,
 		Tag:               tag,
 		Summary:           summary,
