@@ -8,4 +8,11 @@
 ## 重要！
 
 原仓库地址：https://github.com/zeromicro/go-zero/tree/master/tools/goctl  
-主要根据原仓库的 goctl 对 api 和 rpc 代码的生成等做了一些定制化的修改
+主要根据原仓库的 goctl 对 api 和 rpc 代码的生成等做了一些定制化的修改  
+基于 goctl 1.6.1 版本：https://github.com/zeromicro/go-zero/tree/v1.6.1/tools/goctl  
+
+## 改动
+
+1. 优化：当有一个 `base.api` 文件 import 了多个 api 文件时，这些 api 文件可以跨文件共享定义好的结构体，方便一些公有结构体放在 `common.api` 中，其他文件共用
+2. 优化：增加 `goctl api proto` 命令，可以基于 api 文件生成 proto 文件，使用例子：`goctl api proto --api base.api --dir .`
+3. 优化：支持生成 handler 相关文件时增加 swag 注解，需使用项目内模板 `.goctl`，使用例子：`goctl api go --api base.api --dir . --home .goctl`，配合 [swag](https://github.com/swaggo/swag) 工具可以生成 swagger 文档和 swagger 服务
