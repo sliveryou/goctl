@@ -44,17 +44,21 @@ func writeMessage(b *strings.Builder, t spec.Type) error {
 	for i, mf := range mfs {
 		repeated := ""
 		optional := ""
+		notRequired := ""
 		if mf.IsRepeated {
 			repeated = "repeated "
 		} else if mf.IsPointer {
 			optional = "optional "
 		}
+		if mf.IsOptional {
+			notRequired = "，非必填"
+		}
 		comment := ""
 		if len(mf.Comment) > 0 {
 			comment = " // " + mf.Comment
 		}
-		b.WriteString(fmt.Sprintf("%s%s%s%s %s = %d;%s\n",
-			indent, repeated, optional, mf.FieldType, mf.FieldName, i+1, comment))
+		b.WriteString(fmt.Sprintf("%s%s%s%s %s = %d;%s%s\n",
+			indent, repeated, optional, mf.FieldType, mf.FieldName, i+1, comment, notRequired))
 	}
 
 	b.WriteByte('}')
@@ -68,6 +72,7 @@ type messageField struct {
 	Comment        string
 	IsRepeated     bool
 	IsPointer      bool
+	IsOptional     bool
 	MessageName    string
 	MessageComment string
 }
@@ -78,8 +83,10 @@ func parseMessageFields(ds spec.DefineStruct) []messageField {
 
 	for _, m := range ds.Members {
 		var tagName string
+		var isOptional bool
 		if tag := getUsefulTag(m.Tag); tag != nil {
 			tagName = replacer.Replace(tag.Name)
+			isOptional = stringx.Contains(tag.Options, "optional")
 			if tagSnakeName := strcase.ToSnake(tagName); tagSnakeName != tagName {
 				tagName = tagSnakeName
 			}
@@ -101,6 +108,7 @@ func parseMessageFields(ds spec.DefineStruct) []messageField {
 				Comment:    getComment(m.Comment),
 				IsRepeated: false,
 				IsPointer:  isPointer,
+				IsOptional: isOptional,
 			})
 		case spec.ArrayType:
 			mf := messageField{
@@ -109,6 +117,7 @@ func parseMessageFields(ds spec.DefineStruct) []messageField {
 				Comment:    getComment(m.Comment),
 				IsRepeated: true,
 				IsPointer:  isPointer,
+				IsOptional: isOptional,
 			}
 			if mf.FieldType == "byte" {
 				mf.FieldType = "bytes"
@@ -125,6 +134,7 @@ func parseMessageFields(ds spec.DefineStruct) []messageField {
 					Comment:    getComment(m.Comment),
 					IsRepeated: false,
 					IsPointer:  isPointer,
+					IsOptional: isOptional,
 				})
 			}
 		default:

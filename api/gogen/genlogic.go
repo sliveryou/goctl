@@ -53,8 +53,10 @@ func genLogicByRoute(dir, rootPkg string, cfg *config.Config, group spec.Group, 
 		requestString = "req *" + requestGoTypeName(route, typesPacket)
 	}
 	summary := "业务逻辑"
-	if route.AtDoc.Properties != nil {
-		summary = strings.TrimSuffix(strings.TrimPrefix(route.AtDoc.Properties["summary"], "\""), "\"")
+	if route.AtDoc.Text != "" {
+		summary = strings.Trim(route.AtDoc.Text, `"`)
+	} else if route.AtDoc.Properties != nil {
+		summary = strings.Trim(route.AtDoc.Properties["summary"], `"`)
 	}
 
 	subDir := getLogicFolderPath(group, route)

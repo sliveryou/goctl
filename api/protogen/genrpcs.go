@@ -93,10 +93,18 @@ func parseRPC(route spec.Route) (rpc, messageField) {
 		response = mf.MessageName
 	}
 
-	doc := "// " + method + " 方法"
-	if route.AtDoc.Properties != nil {
-		doc = "// " + method + " " + strings.Trim(route.AtDoc.Properties["summary"], `"`)
+	docPrefix, docSuffix := "// "+method+" ", "方法"
+	if route.AtDoc.Text != "" {
+		docSuffix = strings.Trim(route.AtDoc.Text, `"`)
+	} else if route.AtDoc.Properties != nil {
+		docSuffix = strings.Trim(route.AtDoc.Properties["summary"], `"`)
 	}
+	if VarStringRemoveBeforeDelimiter != "" {
+		if splits := strings.Split(docSuffix, VarStringRemoveBeforeDelimiter); len(splits) > 0 {
+			docSuffix = splits[len(splits)-1]
+		}
+	}
+	doc := docPrefix + docSuffix
 
 	return rpc{
 		Doc:      doc,

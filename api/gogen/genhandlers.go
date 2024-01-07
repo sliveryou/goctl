@@ -63,7 +63,9 @@ func genHandler(dir, rootPkg, srvName string, cfg *config.Config, group spec.Gro
 		tag = strings.ToLower(srvName) + "/" + group.GetAnnotation("group")
 	}
 	summary := "Summary"
-	if route.AtDoc.Properties != nil {
+	if route.AtDoc.Text != "" {
+		summary = strings.Trim(route.AtDoc.Text, `"`)
+	} else if route.AtDoc.Properties != nil {
 		summary = strings.Trim(route.AtDoc.Properties["summary"], `"`)
 	}
 	hasSecurity := false

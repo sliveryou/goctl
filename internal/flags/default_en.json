@@ -54,7 +54,8 @@
       "proto": {
         "short": "Generate proto files for provided api in api file",
         "dir": "{{.goctl.api.dir}}",
-        "api": "{{.goctl.api.api}}"
+        "api": "{{.goctl.api.api}}",
+        "delimiter": "Remove all strings from the rpc method doc before the given delimiter (example \"-\")"
       },
       "kt": {
         "short": "Generate kotlin code for provided api file",

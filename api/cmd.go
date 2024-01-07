@@ -104,6 +104,7 @@ func init() {
 
 	protoCmdFlags.StringVar(&protogen.VarStringDir, "dir")
 	protoCmdFlags.StringVar(&protogen.VarStringAPI, "api")
+	protoCmdFlags.StringVar(&protogen.VarStringRemoveBeforeDelimiter, "delimiter")
 
 	// Add sub-commands
 	Cmd.AddCommand(dartCmd, docCmd, formatCmd, goCmd, javaCmd, ktCmd, newCmd, pluginCmd, tsCmd, validateCmd, protoCmd)

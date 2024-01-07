@@ -20,6 +20,8 @@ var (
 	VarStringDir string
 	// VarStringAPI describes the API.
 	VarStringAPI string
+	// VarStringRemoveBeforeDelimiter describes the delimiter.
+	VarStringRemoveBeforeDelimiter string
 )
 
 // ProtoCommand gen proto file from command line
