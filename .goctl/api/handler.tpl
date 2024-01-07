@@ -19,7 +19,7 @@ import (
 // @Param {{.ParamName}} {{.ParamType}} {{.DataType}} {{.IsMandatory}} "{{.Comment}}" {{.Attribute}}{{- end}}
 {{- if .HasRequestBody}}
 // @Param data body types.{{.RequestType}} true "{{.Summary}}"{{end}}
-// @Success 200 {{.ResponseParamType}} types.{{.ResponseDataType}} "{"id":1}"
+// @Success 200 {{.ResponseParamType}} {{.ResponseDataType}} "A successful response."
 // @Router {{.PathName}} [{{.MethodName}}]
 func {{.HandlerName}}(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

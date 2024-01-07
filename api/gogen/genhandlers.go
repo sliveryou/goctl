@@ -92,6 +92,12 @@ func genHandler(dir, rootPkg, srvName string, cfg *config.Config, group spec.Gro
 	if len(respType) != len(respDataType) {
 		respParamType = "{array}"
 	}
+	if respDataType != "" {
+		respDataType = "types." + respDataType
+	} else {
+		respDataType = "string"
+		respParamType = "{string}"
+	}
 	accept := "application/json"
 	if methodName != "get" && !existJsonTag && existFormTag {
 		accept = "multipart/form-data"
