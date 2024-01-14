@@ -222,14 +222,49 @@ type swagParam struct {
 func getSwagParams(route spec.Route) ([]swagParam, bool, bool) {
 	rt := route.RequestType
 	method := strings.ToLower(strings.TrimSpace(route.Method))
+	var sps []swagParam
 
-	if rt != nil {
-		if ds, ok := rt.(spec.DefineStruct); ok {
-			return parseSwagParams(ds, method)
+	// parse "file_*" or "file_array_*" key from the @doc
+	// "*" means the file field name, it's like this below:
+	// 	@doc (
+	//		file_upload: "false, 上传文件"
+	//      file_array_upload: "false, 上传文件数组"
+	//	)
+	// its properties are separated by commas
+	// first one represents the file is it required
+	// second one represents the file description
+
+	for k, v := range route.AtDoc.Properties {
+		if strings.HasPrefix(k, "file_") {
+			name := strings.TrimPrefix(k, "file_")
+			if strings.HasPrefix(k, "file_array_") {
+				name = strings.TrimPrefix(k, "file_array_") + "[]"
+			}
+			sp := swagParam{
+				ParamName:   name,
+				ParamType:   "formData",
+				DataType:    "file",
+				IsMandatory: "false",
+			}
+			if properties := strings.Split(strings.Trim(v, `"`), ","); len(properties) > 0 {
+				isMandatory, _ := strconv.ParseBool(strings.TrimSpace(properties[0]))
+				sp.IsMandatory = strconv.FormatBool(isMandatory)
+				if len(properties) > 1 {
+					sp.Comment = strings.TrimSpace(properties[1])
+				}
+			}
+			sps = append(sps, sp)
 		}
 	}
 
-	return nil, false, false
+	if rt != nil {
+		if ds, ok := rt.(spec.DefineStruct); ok {
+			s, existJsonTag, existFormTag := parseSwagParams(ds, method)
+			return append(sps, s...), existJsonTag, existFormTag
+		}
+	}
+
+	return sps, false, false
 }
 
 func parseSwagParams(ds spec.DefineStruct, method string) ([]swagParam, bool, bool) {
