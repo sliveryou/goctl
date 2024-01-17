@@ -44,21 +44,24 @@ func writeMessage(b *strings.Builder, t spec.Type) error {
 	for i, mf := range mfs {
 		repeated := ""
 		optional := ""
-		notRequired := ""
 		if mf.IsRepeated {
 			repeated = "repeated "
 		} else if mf.IsPointer {
 			optional = "optional "
 		}
+		comment := mf.Comment
 		if mf.IsOptional {
-			notRequired = "，非必填"
+			if comment == "" {
+				comment = "非必填"
+			} else {
+				comment += "，非必填"
+			}
 		}
-		comment := ""
-		if len(mf.Comment) > 0 {
-			comment = " // " + mf.Comment
+		if comment != "" {
+			comment = " // " + comment
 		}
-		b.WriteString(fmt.Sprintf("%s%s%s%s %s = %d;%s%s\n",
-			indent, repeated, optional, mf.FieldType, mf.FieldName, i+1, comment, notRequired))
+		b.WriteString(fmt.Sprintf("%s%s%s%s %s = %d;%s\n",
+			indent, repeated, optional, mf.FieldType, mf.FieldName, i+1, comment))
 	}
 
 	b.WriteByte('}')

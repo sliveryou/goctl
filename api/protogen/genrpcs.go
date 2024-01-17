@@ -86,9 +86,9 @@ func parseRPC(route spec.Route) (rpc, messageField) {
 		}
 		if request != "Empty" {
 			mf.MessageName = strings.TrimSuffix(request, "Req") + "Resp"
-		}
-		if docs := route.RequestType.Documents(); len(docs) > 0 {
-			mf.MessageComment = replacer.Replace(docs[len(docs)-1]) + "\n"
+			if docs := route.RequestType.Documents(); len(docs) > 0 {
+				mf.MessageComment = replacer.Replace(docs[len(docs)-1]) + "\n"
+			}
 		}
 		response = mf.MessageName
 	}
