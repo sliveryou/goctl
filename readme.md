@@ -18,3 +18,4 @@
 3. 优化：支持生成 handler 相关文件时增加 swag 注解，需使用项目内模板 `.goctl`，使用例子：`goctl api go --api base.api --dir . --home .goctl`
    1. 配合 [swag](https://github.com/swaggo/swag) 工具可以生成 swagger 文档和 swagger 服务，使用例子：`swag init -d . -g main.go -p snakecase --ot go,json,yaml -o docs`
    2. 可以将项目内模板作为 goctl 执行默认模板，命令：`mkdir -p ~/.goctl/1.6.1 && cp -r .goctl/* ~/.goctl/1.6.1`
+4. 优化：增加 `goctl rpc client` 命令，可以基于 proto 文件只生成适配 go-zero 的 grpc client 代码，用法与 `goctl rpc protoc` 相同

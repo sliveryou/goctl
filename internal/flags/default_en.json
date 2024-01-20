@@ -252,6 +252,18 @@
         "branch": "{{.global.branch}}",
         "verbose": "Enable log output",
         "client": "Whether to generate rpc client"
+      },
+      "client": {
+        "short": "Generate grpc client",
+        "example": "goctl rpc client xx.proto --go_out=./pb --go-grpc_out=./pb --zrpc_out=.",
+        "multiple": "Generated in multiple rpc service mode",
+        "zrpc_out": "The zrpc output directory",
+        "style": "{{.global.style}}",
+        "home": "{{.global.home}}",
+        "remote": "{{.global.remote}}",
+        "branch": "{{.global.branch}}",
+        "verbose": "Enable log output",
+        "client": "Whether to generate rpc client"
       }
     },
     "template": {

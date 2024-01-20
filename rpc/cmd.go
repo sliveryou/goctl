@@ -19,6 +19,7 @@ var (
 
 	newCmd    = cobrax.NewCommand("new", cobrax.WithRunE(cli.RPCNew), cobrax.WithArgs(cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs)))
 	protocCmd = cobrax.NewCommand("protoc", cobrax.WithRunE(cli.ZRPC), cobrax.WithArgs(cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs)))
+	clientCmd = cobrax.NewCommand("client", cobrax.WithRunE(cli.Client), cobrax.WithArgs(cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs)))
 )
 
 func init() {
@@ -27,6 +28,7 @@ func init() {
 		newCmdFlags      = newCmd.Flags()
 		protocCmdFlags   = protocCmd.Flags()
 		templateCmdFlags = templateCmd.Flags()
+		clientCmdFlags   = clientCmd.Flags()
 	)
 
 	rpcCmdFlags.StringVar(&cli.VarStringOutput, "o")
@@ -72,5 +74,26 @@ func init() {
 	templateCmdFlags.StringVar(&cli.VarStringRemote, "remote")
 	templateCmdFlags.StringVar(&cli.VarStringBranch, "branch")
 
-	Cmd.AddCommand(newCmd, protocCmd, templateCmd)
+	clientCmdFlags.BoolVarP(&cli.VarBoolMultiple, "multiple", "m")
+	clientCmdFlags.StringSliceVar(&cli.VarStringSliceGoOut, "go_out")
+	clientCmdFlags.StringSliceVar(&cli.VarStringSliceGoGRPCOut, "go-grpc_out")
+	clientCmdFlags.StringSliceVar(&cli.VarStringSliceGoOpt, "go_opt")
+	clientCmdFlags.StringSliceVar(&cli.VarStringSliceGoGRPCOpt, "go-grpc_opt")
+	clientCmdFlags.StringSliceVar(&cli.VarStringSlicePlugin, "plugin")
+	clientCmdFlags.StringSliceVarP(&cli.VarStringSliceProtoPath, "proto_path", "I")
+	clientCmdFlags.StringVar(&cli.VarStringStyle, "style")
+	clientCmdFlags.StringVar(&cli.VarStringZRPCOut, "zrpc_out")
+	clientCmdFlags.StringVar(&cli.VarStringHome, "home")
+	clientCmdFlags.StringVar(&cli.VarStringRemote, "remote")
+	clientCmdFlags.StringVar(&cli.VarStringBranch, "branch")
+	clientCmdFlags.BoolVarP(&cli.VarBoolVerbose, "verbose", "v")
+	clientCmdFlags.MarkHidden("go_out")
+	clientCmdFlags.MarkHidden("go-grpc_out")
+	clientCmdFlags.MarkHidden("go_opt")
+	clientCmdFlags.MarkHidden("go-grpc_opt")
+	clientCmdFlags.MarkHidden("plugin")
+	clientCmdFlags.MarkHidden("proto_path")
+	clientCmdFlags.BoolVarPWithDefaultValue(&cli.VarBoolClient, "client", "c", true)
+
+	Cmd.AddCommand(newCmd, protocCmd, templateCmd, clientCmd)
 }

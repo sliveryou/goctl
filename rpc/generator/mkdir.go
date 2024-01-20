@@ -4,11 +4,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/sliveryou/goctl/util/format"
-
 	conf "github.com/sliveryou/goctl/config"
 	"github.com/sliveryou/goctl/rpc/parser"
 	"github.com/sliveryou/goctl/util/ctx"
+	"github.com/sliveryou/goctl/util/format"
 	"github.com/sliveryou/goctl/util/pathx"
 	"github.com/sliveryou/goctl/util/stringx"
 )
@@ -172,6 +171,101 @@ func mkdir(ctx *ctx.ProjectContext, proto parser.Proto, conf *conf.Config, c *ZR
 		Base:     filepath.Base(svcDir),
 		GetChildPackage: func(childPath string) (string, error) {
 			return getChildPackage(svcDir, childPath)
+		},
+	}
+
+	inner[pb] = Dir{
+		Filename: pbDir,
+		Package:  filepath.ToSlash(filepath.Join(ctx.Path, strings.TrimPrefix(pbDir, ctx.Dir))),
+		Base:     filepath.Base(pbDir),
+		GetChildPackage: func(childPath string) (string, error) {
+			return getChildPackage(pbDir, childPath)
+		},
+	}
+
+	inner[protoGo] = Dir{
+		Filename: protoGoDir,
+		Package: filepath.ToSlash(filepath.Join(ctx.Path,
+			strings.TrimPrefix(protoGoDir, ctx.Dir))),
+		Base: filepath.Base(protoGoDir),
+		GetChildPackage: func(childPath string) (string, error) {
+			return getChildPackage(protoGoDir, childPath)
+		},
+	}
+
+	for _, v := range inner {
+		err := pathx.MkdirIfNotExist(v.Filename)
+		if err != nil {
+			return nil, err
+		}
+	}
+	serviceName := strings.TrimSuffix(proto.Name, filepath.Ext(proto.Name))
+	return &defaultDirContext{
+		ctx:         ctx,
+		inner:       inner,
+		serviceName: stringx.From(strings.ReplaceAll(serviceName, "-", "")),
+	}, nil
+}
+
+func mkdirClient(ctx *ctx.ProjectContext, proto parser.Proto, conf *conf.Config, c *ZRpcContext) (DirContext,
+	error) {
+	inner := make(map[string]Dir)
+	clientDir := filepath.Join(ctx.WorkDir, "client")
+	pbDir := filepath.Join(ctx.WorkDir, proto.GoPackage)
+	protoGoDir := pbDir
+	if c != nil {
+		pbDir = c.ProtoGenGrpcDir
+		protoGoDir = c.ProtoGenGoDir
+	}
+
+	getChildPackage := func(parent, childPath string) (string, error) {
+		child := strings.TrimPrefix(childPath, parent)
+		abs := filepath.Join(parent, strings.ToLower(child))
+		if c.Multiple {
+			if err := pathx.MkdirIfNotExist(abs); err != nil {
+				return "", err
+			}
+		}
+		childPath = strings.TrimPrefix(abs, ctx.Dir)
+		pkg := filepath.Join(ctx.Path, childPath)
+		return filepath.ToSlash(pkg), nil
+	}
+
+	var callClientDir string
+	if !c.Multiple {
+		callDir := filepath.Join(ctx.WorkDir,
+			strings.ToLower(stringx.From(proto.Service[0].Name).ToCamel()))
+		if strings.EqualFold(proto.Service[0].Name, filepath.Base(proto.GoPackage)) {
+			var err error
+			clientDir, err = format.FileNamingFormat(conf.NamingFormat, proto.Service[0].Name+"_client")
+			if err != nil {
+				return nil, err
+			}
+			callDir = filepath.Join(ctx.WorkDir, clientDir)
+		}
+		callClientDir = callDir
+	} else {
+		callClientDir = clientDir
+	}
+	if c.IsGenClient {
+		inner[call] = Dir{
+			Filename: callClientDir,
+			Package: filepath.ToSlash(filepath.Join(ctx.Path,
+				strings.TrimPrefix(callClientDir, ctx.Dir))),
+			Base: filepath.Base(callClientDir),
+			GetChildPackage: func(childPath string) (string, error) {
+				return getChildPackage(callClientDir, childPath)
+			},
+		}
+	}
+
+	inner[wd] = Dir{
+		Filename: ctx.WorkDir,
+		Package: filepath.ToSlash(filepath.Join(ctx.Path,
+			strings.TrimPrefix(ctx.WorkDir, ctx.Dir))),
+		Base: filepath.Base(ctx.WorkDir),
+		GetChildPackage: func(childPath string) (string, error) {
+			return getChildPackage(ctx.WorkDir, childPath)
 		},
 	}
 

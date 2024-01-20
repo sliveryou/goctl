@@ -110,3 +110,52 @@ func (g *Generator) Generate(zctx *ZRpcContext) error {
 
 	return err
 }
+
+// GenerateClient generates a rpc service, through the proto file,
+// code storage directory, and proto import parameters to control
+// the source file and target location of the rpc service that needs to be generated
+func (g *Generator) GenerateClient(zctx *ZRpcContext) error {
+	abs, err := filepath.Abs(zctx.Output)
+	if err != nil {
+		return err
+	}
+
+	err = pathx.MkdirIfNotExist(abs)
+	if err != nil {
+		return err
+	}
+
+	err = g.Prepare()
+	if err != nil {
+		return err
+	}
+
+	projectCtx, err := ctx.Prepare(abs)
+	if err != nil {
+		return err
+	}
+
+	p := parser.NewDefaultProtoParser()
+	proto, err := p.Parse(zctx.Src, zctx.Multiple)
+	if err != nil {
+		return err
+	}
+
+	dirCtx, err := mkdirClient(projectCtx, proto, g.cfg, zctx)
+	if err != nil {
+		return err
+	}
+
+	err = g.GenPb(dirCtx, zctx)
+	if err != nil {
+		return err
+	}
+
+	if zctx.IsGenClient {
+		err = g.GenCall(dirCtx, proto, g.cfg, zctx)
+	}
+
+	console.NewColorConsole().MarkDone()
+
+	return err
+}
