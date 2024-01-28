@@ -11,6 +11,22 @@
 主要根据原仓库的 goctl 对 api 和 rpc 代码的生成等做了一些定制化的修改  
 基于 goctl 1.6.1 版本：https://github.com/zeromicro/go-zero/tree/v1.6.1/tools/goctl  
 
+## 安装
+
+```bash
+# 可选：自行编译安装（代码最新）：
+$ git clone https://github.com/sliveryou/goctl.git
+$ cd goctl
+$ go install
+
+# 推荐：go download（代码稳定）
+# 如果 go 版本在 1.16 以前，使用如下命令安装：
+$ GO111MODULE=on go get -u github.com/sliveryou/goctl@latest
+
+# 如果 go 版本在 1.16 及以后，使用如下命令安装：
+$ GO111MODULE=on go install github.com/sliveryou/goctl@latest
+```
+
 ## 改动
 
 1. 优化：当有一个 api 文件，如 `base.api` 文件 import 了多个 api 文件时，这些 api 文件可以跨文件共享定义好的结构体，方便一些公有结构体放在 `common.api` 中，其他文件共用
@@ -19,3 +35,5 @@
    1. 配合 [swag](https://github.com/swaggo/swag) 工具可以生成 swagger 文档和 swagger 服务，使用例子：`swag init -d . -g main.go -p snakecase --ot go,json,yaml -o docs`
    2. 可以将项目内模板作为 goctl 执行默认模板，命令：`mkdir -p ~/.goctl/1.6.1 && cp -r .goctl/* ~/.goctl/1.6.1`
 4. 优化：增加 `goctl rpc client` 命令，可以基于 proto 文件只生成适配 go-zero 的 grpc client 代码，用法与 `goctl rpc protoc` 相同
+5. 优化：增加 rpc 记录日志，需要修改本地 goctl 模板，参考 [.goctl/rpc/logic.tpl ](.goctl/rpc/logic.tpl)
+6. 优化：增加 api 记录日志，需要修改本地 goctl 模板，参考 [.goctl/api/logic.tpl ](.goctl/api/logic.tpl)

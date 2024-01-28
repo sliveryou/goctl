@@ -20,7 +20,10 @@ func New{{.logicName}}(ctx context.Context,svcCtx *svc.ServiceContext) *{{.logic
 	return &{{.logicName}}{
 		ctx:    ctx,
 		svcCtx: svcCtx,
-		Logger: logx.WithContext(ctx),
+		Logger: logx.WithContext(ctx).WithFields(
+			logx.Field("service", svcCtx.Config.Name),
+			logx.Field("method", "{{.service}}.{{.method}}"),
+		),
 	}
 }
 {{.functions}}

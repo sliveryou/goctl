@@ -70,6 +70,7 @@ func genLogicByRoute(dir, rootPkg string, cfg *config.Config, group spec.Group, 
 		builtinTemplate: logicTemplate,
 		data: map[string]string{
 			"pkgName":      subDir[strings.LastIndex(subDir, "/")+1:],
+			"callName":     strings.ReplaceAll(subDir[strings.LastIndex(subDir, "logic/")+6:], "/", "."),
 			"imports":      imports,
 			"logic":        strings.Title(logic),
 			"function":     strings.Title(strings.TrimSuffix(logic, "Logic")),
