@@ -5,11 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/cobra"
-
 	"github.com/sliveryou/goctl/internal/cobrax"
 	"github.com/sliveryou/goctl/util/ctx"
 	"github.com/sliveryou/goctl/util/pathx"
+	"github.com/spf13/cobra"
 )
 
 var (

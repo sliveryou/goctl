@@ -12,12 +12,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	"github.com/sliveryou/goctl/api/parser"
 	"github.com/sliveryou/goctl/api/spec"
 	"github.com/sliveryou/goctl/rpc/execx"
 	"github.com/sliveryou/goctl/util/pathx"
+	"github.com/spf13/cobra"
 )
 
 const pluginArg = "_plugin"

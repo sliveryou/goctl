@@ -7,10 +7,9 @@ import (
 	"text/template"
 
 	"github.com/gookit/color"
-	"github.com/spf13/cobra"
-
 	"github.com/sliveryou/goctl/util"
 	"github.com/sliveryou/goctl/util/pathx"
+	"github.com/spf13/cobra"
 )
 
 const (

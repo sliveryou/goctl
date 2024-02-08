@@ -5,13 +5,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/zeromicro/go-zero/core/lang"
-
 	"github.com/sliveryou/goctl/api/spec"
 	"github.com/sliveryou/goctl/pkg/parser/api/ast"
 	"github.com/sliveryou/goctl/pkg/parser/api/importstack"
 	"github.com/sliveryou/goctl/pkg/parser/api/placeholder"
 	"github.com/sliveryou/goctl/pkg/parser/api/token"
+	"github.com/zeromicro/go-zero/core/lang"
 )
 
 // Analyzer analyzes the ast and converts it to spec.
@@ -402,6 +401,9 @@ func Parse(filename string, src interface{}) (*spec.ApiSpec, error) {
 	importSet := map[string]lang.PlaceholderType{}
 	api, err := convert2API(ast, importSet, is)
 	if err != nil {
+		return nil, err
+	}
+	if err := api.SelfCheck(); err != nil {
 		return nil, err
 	}
 

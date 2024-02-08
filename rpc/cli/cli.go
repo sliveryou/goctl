@@ -6,12 +6,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	"github.com/sliveryou/goctl/rpc/generator"
 	"github.com/sliveryou/goctl/util"
 	"github.com/sliveryou/goctl/util/console"
 	"github.com/sliveryou/goctl/util/pathx"
+	"github.com/spf13/cobra"
 )
 
 var (

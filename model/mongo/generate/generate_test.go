@@ -5,10 +5,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/sliveryou/goctl/config"
 	"github.com/sliveryou/goctl/util/pathx"
+	"github.com/stretchr/testify/assert"
 )
 
 var testTypes = `

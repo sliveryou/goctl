@@ -11,12 +11,11 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/zeromicro/go-zero/core/stringx"
-
 	"github.com/sliveryou/goctl/api/spec"
 	apiutil "github.com/sliveryou/goctl/api/util"
 	"github.com/sliveryou/goctl/util"
 	"github.com/sliveryou/goctl/util/pathx"
+	"github.com/zeromicro/go-zero/core/stringx"
 )
 
 const (

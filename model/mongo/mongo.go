@@ -5,12 +5,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	"github.com/sliveryou/goctl/config"
 	"github.com/sliveryou/goctl/model/mongo/generate"
 	file "github.com/sliveryou/goctl/util"
 	"github.com/sliveryou/goctl/util/pathx"
+	"github.com/spf13/cobra"
 )
 
 var (

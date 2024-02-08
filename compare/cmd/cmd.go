@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-
 	"github.com/sliveryou/goctl/compare/testdata"
 	"github.com/sliveryou/goctl/util/console"
+	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{

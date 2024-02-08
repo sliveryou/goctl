@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"os"
 
-	{{.imports}}
-
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/service"
 	"github.com/zeromicro/go-zero/zrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+
+	{{.imports}}
 )
 
 var (

@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/gookit/color"
-
 	"github.com/sliveryou/goctl/util/pathx"
 )
 

@@ -8,11 +8,6 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/spf13/cobra"
 
-	"github.com/zeromicro/go-zero/core/collection"
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/core/stores/postgres"
-	"github.com/zeromicro/go-zero/core/stores/sqlx"
-
 	"github.com/sliveryou/goctl/config"
 	"github.com/sliveryou/goctl/model/sql/command/migrationnotes"
 	"github.com/sliveryou/goctl/model/sql/gen"
@@ -21,6 +16,10 @@ import (
 	file "github.com/sliveryou/goctl/util"
 	"github.com/sliveryou/goctl/util/console"
 	"github.com/sliveryou/goctl/util/pathx"
+	"github.com/zeromicro/go-zero/core/collection"
+	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/stores/postgres"
+	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
 var (

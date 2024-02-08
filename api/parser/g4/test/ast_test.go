@@ -4,10 +4,9 @@ import (
 	_ "embed"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/sliveryou/goctl/api/parser/g4/ast"
 	"github.com/sliveryou/goctl/api/parser/g4/gen/api"
+	"github.com/stretchr/testify/assert"
 )
 
 //go:embed apis/test.api

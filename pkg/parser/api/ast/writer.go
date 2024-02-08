@@ -21,7 +21,7 @@ const (
 const (
 	_ WriteMode = 1 << iota
 	// ModeAuto is the default mode, which will automatically
-	// determine whether to write a newline.
+	//determine whether to write a newline.
 	ModeAuto
 
 	// ModeExpectInSameLine will write in the same line.

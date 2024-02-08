@@ -4,10 +4,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/sliveryou/goctl/util/format"
+
 	conf "github.com/sliveryou/goctl/config"
 	"github.com/sliveryou/goctl/rpc/parser"
 	"github.com/sliveryou/goctl/util/ctx"
-	"github.com/sliveryou/goctl/util/format"
 	"github.com/sliveryou/goctl/util/pathx"
 	"github.com/sliveryou/goctl/util/stringx"
 )

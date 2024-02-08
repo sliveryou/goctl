@@ -8,12 +8,11 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	mocksql "github.com/sliveryou/goctl/model/sql/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/redis"
 	"github.com/zeromicro/go-zero/core/stores/redis/redistest"
-
-	mocksql "github.com/sliveryou/goctl/model/sql/test"
 )
 
 func TestStudentModel(t *testing.T) {

@@ -13,6 +13,11 @@ import (
 	"github.com/sliveryou/goctl/pkg/parser/api/token"
 )
 
+const (
+	atServerGroupKey  = "group:"
+	atServerPrefixKey = "prefix:"
+)
+
 // API is the parsed api file.
 type API struct {
 	Filename      string
@@ -81,15 +86,12 @@ func convert2API(a *ast.AST, importSet map[string]lang.PlaceholderType, is *impo
 		}
 	}
 
-	if err := api.SelfCheck(); err != nil {
-		return nil, err
-	}
 	return api, nil
 }
 
 func (api *API) checkImportStmt() error {
 	f := newFilter()
-	b := f.addCheckItem("import value expression")
+	b := f.addCheckItem(api.Filename, "import value expression")
 	for _, v := range api.importStmt {
 		switch val := v.(type) {
 		case *ast.ImportLiteralStmt:
@@ -106,7 +108,7 @@ func (api *API) checkInfoStmt() error {
 		return nil
 	}
 	f := newFilter()
-	b := f.addCheckItem("info key expression")
+	b := f.addCheckItem(api.Filename, "info key expression")
 	for _, v := range api.info.Values {
 		b.check(v.Key)
 	}
@@ -115,9 +117,9 @@ func (api *API) checkInfoStmt() error {
 
 func (api *API) checkServiceStmt() error {
 	f := newFilter()
-	serviceNameChecker := f.addCheckItem("service name expression")
-	handlerChecker := f.addCheckItem("handler expression")
-	pathChecker := f.addCheckItem("path expression")
+	serviceNameChecker := f.addCheckItem(api.Filename, "service name expression")
+	handlerChecker := f.addCheckItem(api.Filename, "handler expression")
+	pathChecker := f.addCheckItem(api.Filename, "path expression")
 	var serviceName = map[string]string{}
 	for _, v := range api.ServiceStmts {
 		name := strings.TrimSuffix(v.Name.Format(""), "-api")
@@ -128,10 +130,13 @@ func (api *API) checkServiceStmt() error {
 		} else {
 			serviceName[name] = name
 		}
-		var group = api.getAtServerValue(v.AtServerStmt, "prefix")
+		var (
+			prefix = api.getAtServerValue(v.AtServerStmt, atServerPrefixKey)
+			group  = api.getAtServerValue(v.AtServerStmt, atServerGroupKey)
+		)
 		for _, item := range v.Routes {
-			handlerChecker.check(item.AtHandler.Name)
-			path := fmt.Sprintf("[%s]:%s", group, item.Route.Format(""))
+			handlerChecker.checkNodeWithPrefix(group, item.AtHandler.Name)
+			path := fmt.Sprintf("[%s]:%s", prefix, item.Route.Format(""))
 			pathChecker.check(ast.NewTokenNode(token.Token{
 				Text:     path,
 				Position: item.Route.Pos(),
@@ -143,7 +148,7 @@ func (api *API) checkServiceStmt() error {
 
 func (api *API) checkTypeStmt() error {
 	f := newFilter()
-	b := f.addCheckItem("type expression")
+	b := f.addCheckItem(api.Filename, "type expression")
 	for _, v := range api.TypeStmt {
 		switch val := v.(type) {
 		case *ast.TypeLiteralStmt:

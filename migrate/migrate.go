@@ -14,10 +14,9 @@ import (
 	"time"
 
 	"github.com/gookit/color"
-	"github.com/spf13/cobra"
-
 	"github.com/sliveryou/goctl/util/console"
 	"github.com/sliveryou/goctl/util/ctx"
+	"github.com/spf13/cobra"
 )
 
 const defaultMigrateVersion = "v1.3.0"

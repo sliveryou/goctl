@@ -109,7 +109,7 @@ func init() {
 	})
 
 	rootCmd.Version = fmt.Sprintf(
-		"%s %s/%s", version.BuildVersion,
+		"custom %s %s/%s", version.BuildVersion,
 		runtime.GOOS, runtime.GOARCH)
 
 	rootCmd.SetUsageTemplate(usageTpl)

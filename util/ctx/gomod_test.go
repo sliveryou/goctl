@@ -10,11 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/zeromicro/go-zero/core/stringx"
-
 	"github.com/sliveryou/goctl/rpc/execx"
 	"github.com/sliveryou/goctl/util/pathx"
+	"github.com/stretchr/testify/assert"
+	"github.com/zeromicro/go-zero/core/stringx"
 )
 
 func TestProjectFromGoMod(t *testing.T) {

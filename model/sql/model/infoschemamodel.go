@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/zeromicro/go-zero/core/stores/sqlx"
-
 	"github.com/sliveryou/goctl/model/sql/util"
+	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
 const indexPri = "PRIMARY"

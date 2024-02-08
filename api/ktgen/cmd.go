@@ -3,9 +3,8 @@ package ktgen
 import (
 	"errors"
 
-	"github.com/spf13/cobra"
-
 	"github.com/sliveryou/goctl/api/parser"
+	"github.com/spf13/cobra"
 )
 
 var (

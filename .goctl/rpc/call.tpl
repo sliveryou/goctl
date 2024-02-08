@@ -5,11 +5,11 @@ package {{.filePackage}}
 import (
 	"context"
 
-	{{.pbPackage}}
-	{{if ne .pbPackage .protoGoPackage}}{{.protoGoPackage}}{{end}}
-
 	"github.com/zeromicro/go-zero/zrpc"
 	"google.golang.org/grpc"
+
+	{{.pbPackage}}
+	{{if ne .pbPackage .protoGoPackage}}{{.protoGoPackage}}{{end}}
 )
 
 // 类型定义

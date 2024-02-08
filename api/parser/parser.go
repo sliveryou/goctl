@@ -25,7 +25,8 @@ func Parse(filename string) (*spec.ApiSpec, error) {
 		return apiParser.Parse(filename, "")
 	}
 
-	astParser := ast.NewParser(ast.WithParserPrefix(filepath.Base(filename)), ast.WithParserDebug())
+	astParser := ast.NewParser(ast.WithParserPrefix(filepath.Base(filename)), ast.WithParserDebug(),
+		ast.WithParserSkipCheckTypeDeclaration())
 	parsedApi, err := astParser.Parse(filename)
 	if err != nil {
 		return nil, err

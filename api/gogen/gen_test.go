@@ -8,12 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/sliveryou/goctl/api/parser"
 	"github.com/sliveryou/goctl/pkg/env"
 	"github.com/sliveryou/goctl/rpc/execx"
 	"github.com/sliveryou/goctl/util/pathx"
+	"github.com/stretchr/testify/assert"
 )
 
 var (

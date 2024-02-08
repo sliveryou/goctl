@@ -3,10 +3,9 @@ package cobrax
 import (
 	"fmt"
 
+	"github.com/sliveryou/goctl/internal/flags"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-
-	"github.com/sliveryou/goctl/internal/flags"
 )
 
 type Option func(*cobra.Command)

@@ -1,10 +1,9 @@
 package main
 
 import (
+	"github.com/sliveryou/goctl/cmd"
 	"github.com/zeromicro/go-zero/core/load"
 	"github.com/zeromicro/go-zero/core/logx"
-
-	"github.com/sliveryou/goctl/cmd"
 )
 
 func main() {

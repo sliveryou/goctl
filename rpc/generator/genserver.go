@@ -6,14 +6,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/zeromicro/go-zero/core/collection"
-
 	conf "github.com/sliveryou/goctl/config"
 	"github.com/sliveryou/goctl/rpc/parser"
 	"github.com/sliveryou/goctl/util"
 	"github.com/sliveryou/goctl/util/format"
 	"github.com/sliveryou/goctl/util/pathx"
 	"github.com/sliveryou/goctl/util/stringx"
+	"github.com/zeromicro/go-zero/core/collection"
 )
 
 const functionTemplate = `

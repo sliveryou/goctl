@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/spf13/cobra"
-
 	"github.com/sliveryou/goctl/rpc/execx"
+	"github.com/spf13/cobra"
 )
 
 // upgrade gets the latest goctl by

@@ -5,9 +5,6 @@ import (
 	"path/filepath"
 
 	"github.com/gookit/color"
-	"github.com/spf13/cobra"
-	"github.com/zeromicro/go-zero/core/errorx"
-
 	"github.com/sliveryou/goctl/api/apigen"
 	"github.com/sliveryou/goctl/api/gogen"
 	apinew "github.com/sliveryou/goctl/api/new"
@@ -18,6 +15,8 @@ import (
 	modelgen "github.com/sliveryou/goctl/model/sql/gen"
 	rpcgen "github.com/sliveryou/goctl/rpc/generator"
 	"github.com/sliveryou/goctl/util/pathx"
+	"github.com/spf13/cobra"
+	"github.com/zeromicro/go-zero/core/errorx"
 )
 
 const templateParentPath = "/"

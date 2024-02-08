@@ -3,9 +3,9 @@ package {{.packageName}}
 import (
 	"context"
 
-	{{.imports}}
-
 	"github.com/zeromicro/go-zero/core/logx"
+
+	{{.imports}}
 )
 
 // {{.logicName}} {{.comment}}上下文

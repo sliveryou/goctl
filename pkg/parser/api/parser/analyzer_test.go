@@ -8,9 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/sliveryou/goctl/pkg/parser/api/assertx"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_Parse(t *testing.T) {
@@ -42,5 +41,9 @@ func Test_Parse(t *testing.T) {
 	t.Run("circleImport", func(t *testing.T) {
 		_, err := Parse("./testdata/base.api", nil)
 		assertx.Error(t, err)
+	})
+	t.Run("link_import", func(t *testing.T) {
+		_, err := Parse("./testdata/link_import.api", nil)
+		assert.Nil(t, err)
 	})
 }
