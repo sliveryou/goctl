@@ -13,19 +13,19 @@
 
 ## 安装
 
+**需要 go 1.19 以上版本编译安装**
+
 ```bash
 # 可选：自行编译安装（代码最新）：
 $ git clone https://github.com/sliveryou/goctl.git
 $ cd goctl
 $ go install
 
-# 推荐：go download（代码稳定）
-# 如果 go 版本在 1.16 以前，使用如下命令安装：
-$ GO111MODULE=on go get -u github.com/sliveryou/goctl@latest
-
-# 如果 go 版本在 1.16 及以后，使用如下命令安装：
-$ GO111MODULE=on go install github.com/sliveryou/goctl@latest
+# 推荐：使用如下命令安装：
+$ go install github.com/sliveryou/goctl@latest
 ```
+
+或者从 github 的 [release](https://github.com/sliveryou/goctl/releases) 页面下载预编译好的二进制文件
 
 ## 改动
 
