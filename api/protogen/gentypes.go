@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gookit/color"
 	"github.com/iancoleman/strcase"
-	"github.com/logrusorgru/aurora"
 	"github.com/zeromicro/go-zero/core/stringx"
 
 	"github.com/sliveryou/goctl/api/spec"
@@ -104,10 +104,10 @@ func parseMessageFields(ds spec.DefineStruct) []messageField {
 
 		mt, isPointer := convertSpec(m.Type)
 		switch mt := (mt).(type) {
-		case spec.PrimitiveType:
+		case spec.PrimitiveType, spec.MapType, spec.InterfaceType:
 			mfs = append(mfs, messageField{
 				FieldName:  tagName,
-				FieldType:  getFieldType(mt.RawName),
+				FieldType:  getFieldType(mt.Name()),
 				Comment:    getComment(m.Comment),
 				IsRepeated: false,
 				IsPointer:  isPointer,
@@ -141,8 +141,8 @@ func parseMessageFields(ds spec.DefineStruct) []messageField {
 				})
 			}
 		default:
-			fmt.Println(aurora.Red(fmt.Sprintf("struct type: %s, member name: %s, member type: %s, "+
-				"convert message failed.", ds.RawName, m.Name, mt.Name())))
+			color.Red.Printf("struct type: %s, member name: %s, member type: %s, "+
+				"convert message failed.\n", ds.RawName, m.Name, mt.Name())
 		}
 	}
 
@@ -183,6 +183,8 @@ func getFieldType(dataType string) string {
 		return "bool"
 	case "string":
 		return "string"
+	case "any", "interface{}", "map[string]any", "map[string]interface{}":
+		return "bytes"
 	default:
 		return dataType
 	}

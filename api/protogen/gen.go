@@ -7,7 +7,7 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/logrusorgru/aurora"
+	"github.com/gookit/color"
 	"github.com/spf13/cobra"
 	"github.com/zeromicro/go-zero/core/logx"
 
@@ -50,16 +50,19 @@ func DoGenProto(apiFile, dir string) error {
 	apiName := apiBase[:len(apiBase)-len(filepath.Ext(apiBase))]
 
 	logx.Must(pathx.MkdirIfNotExist(dir))
-	f, err := os.Create(path.Join(dir, apiName+"-rpc.proto"))
+	f, err := os.Create(path.Join(dir, apiName+".proto"))
 	logx.Must(err)
 	defer f.Close()
 
 	ts, err := BuildTypes(api)
 	logx.Must(err)
 
-	rs, hasEmpty := BuildRPCs(api)
+	rs, hasEmpty := BuildRPCs(api, apiName)
 
-	_, err = f.WriteString("syntax = \"proto3\";\n\noption go_package = \"./pb\";\n\npackage pb;")
+	_, err = f.WriteString(fmt.Sprintf("syntax = \"proto3\";\n\noption go_package = \"./pb\";\n\npackage %s;", apiName))
+	logx.Must(err)
+
+	_, err = f.WriteString("\n\n" + rs)
 	logx.Must(err)
 
 	if hasEmpty {
@@ -67,10 +70,10 @@ func DoGenProto(apiFile, dir string) error {
 		logx.Must(err)
 	}
 
-	_, err = f.WriteString("\n\n" + ts + "\n\n" + rs)
+	_, err = f.WriteString("\n\n" + ts)
 	logx.Must(err)
 
-	fmt.Println(aurora.Green("Done."))
+	color.Green.Println("Done.")
 
 	return nil
 }

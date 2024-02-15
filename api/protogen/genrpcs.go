@@ -4,20 +4,22 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/logrusorgru/aurora"
+	"github.com/gookit/color"
 
 	"github.com/sliveryou/goctl/api/spec"
+	"github.com/sliveryou/goctl/util/stringx"
 )
 
 // BuildRPCs gen rpcs to string
-func BuildRPCs(api *spec.ApiSpec) (string, bool) {
+func BuildRPCs(api *spec.ApiSpec, apiName string) (string, bool) {
 	var builder strings.Builder
 	var messageBuilder strings.Builder
 	var hasEmpty bool
 	methodMap := make(map[string]struct{})
 	messageMap := make(map[string]struct{})
 
-	builder.WriteString("// Rpc 相关服务\nservice Rpc {\n")
+	serviceName := stringx.From(apiName).Title()
+	builder.WriteString(fmt.Sprintf("// %s 服务\nservice %s {\n", serviceName, serviceName))
 	for i, group := range api.Service.Groups {
 		if i > 0 {
 			builder.WriteByte('\n')
@@ -39,8 +41,8 @@ func BuildRPCs(api *spec.ApiSpec) (string, bool) {
 				}
 				methodMap[r.Method] = struct{}{}
 			} else {
-				fmt.Println(aurora.Red(fmt.Sprintf("duplicate handler name, handler: %s, method: %s, path: %s, please rename it.",
-					route.Handler, route.Method, route.Path)))
+				color.Red.Printf("duplicate handler name, handler: %s, method: %s, path: %s, please rename it.\n",
+					route.Handler, route.Method, route.Path)
 			}
 		}
 	}
@@ -60,7 +62,7 @@ type rpc struct {
 func parseRPC(route spec.Route) (rpc, messageField) {
 	var mf messageField
 	hasEmpty := false
-	method := strings.Title(getHandlerBaseName(route))
+	method := stringx.From(getHandlerBaseName(route)).Title()
 
 	request := route.RequestTypeName()
 	if request == "" {
