@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/gookit/color"
 	"github.com/spf13/cobra"
@@ -57,7 +58,7 @@ func DoGenProto(apiFile, dir string) error {
 	ts, err := BuildTypes(api)
 	logx.Must(err)
 
-	rs, hasEmpty := BuildRPCs(api, apiName)
+	rs, ms, hasEmpty := BuildRPCs(api, apiName)
 
 	_, err = f.WriteString(fmt.Sprintf("syntax = \"proto3\";\n\noption go_package = \"./pb\";\n\npackage %s;", apiName))
 	logx.Must(err)
@@ -71,6 +72,9 @@ func DoGenProto(apiFile, dir string) error {
 	}
 
 	_, err = f.WriteString("\n\n" + ts)
+	logx.Must(err)
+
+	_, err = f.WriteString("\n\n" + strings.TrimSuffix(ms, "\n"))
 	logx.Must(err)
 
 	color.Green.Println("Done.")

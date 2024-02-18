@@ -11,10 +11,9 @@ import (
 )
 
 // BuildRPCs gen rpcs to string
-func BuildRPCs(api *spec.ApiSpec, apiName string) (string, bool) {
+func BuildRPCs(api *spec.ApiSpec, apiName string) (rpcs string, messages string, hasEmpty bool) {
 	var builder strings.Builder
 	var messageBuilder strings.Builder
-	var hasEmpty bool
 	methodMap := make(map[string]struct{})
 	messageMap := make(map[string]struct{})
 
@@ -48,7 +47,7 @@ func BuildRPCs(api *spec.ApiSpec, apiName string) (string, bool) {
 	}
 	builder.WriteByte('}')
 
-	return messageBuilder.String() + builder.String(), hasEmpty
+	return builder.String(), messageBuilder.String(), hasEmpty
 }
 
 type rpc struct {
